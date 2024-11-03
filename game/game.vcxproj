@@ -73,36 +73,36 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>gfc\include;gfc\sdl\include;$(IncludePath)</IncludePath>
-    <LibraryPath>gfc\sdl\x86;$(LibraryPath)</LibraryPath>
+    <LibraryPath>gfc\sdl\_x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>gfc\include;gfc\sdl\include;$(IncludePath)</IncludePath>
-    <LibraryPath>gfc\sdl\x86;$(LibraryPath)</LibraryPath>
+    <LibraryPath>gfc\sdl\_x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>gfc\include;gfc\sdl\include;$(IncludePath)</IncludePath>
-    <LibraryPath>gfc\sdl\x64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>gfc\sdl\_x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>gfc\include;gfc\sdl\include;$(IncludePath)</IncludePath>
-    <LibraryPath>gfc\sdl\x64;$(LibraryPath)</LibraryPath>
+    <LibraryPath>gfc\sdl\_x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LocalDebuggerEnvironment>PATH=%PATH%;$(ProjectDir)\gfc\sdl\x86
+    <LocalDebuggerEnvironment>PATH=%PATH%;$(ProjectDir)\gfc\sdl\_x86
 $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <LocalDebuggerEnvironment>PATH=%PATH%;$(ProjectDir)\gfc\sdl\x86</LocalDebuggerEnvironment>
+    <LocalDebuggerEnvironment>PATH=%PATH%;$(ProjectDir)\gfc\sdl\_x86</LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerEnvironment>PATH=%PATH%;$(ProjectDir)\gfc\sdl\x64
+    <LocalDebuggerEnvironment>PATH=%PATH%;$(ProjectDir)\gfc\sdl\_x64
 $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <LocalDebuggerEnvironment>PATH=%PATH%;$(ProjectDir)\gfc\sdl\x64
+    <LocalDebuggerEnvironment>PATH=%PATH%;$(ProjectDir)\gfc\sdl\_x64
 $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
@@ -112,8 +112,9 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(ProjectDir)\source\;$(ProjectDir)\headers\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -148,6 +149,7 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
       <ConformanceMode>false</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(ProjectDir)\source\;$(ProjectDir)\headers\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -176,13 +178,21 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MyGame.cpp" />
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="source\DecisionMaker.cpp" />
+    <ClCompile Include="source\Dialogbox.cpp" />
+    <ClCompile Include="source\Enemy.cpp" />
+    <ClCompile Include="source\Intersection.cpp" />
+    <ClCompile Include="source\PathFinder.cpp" />
+    <ClCompile Include="source\Player.cpp" />
+    <ClCompile Include="source\Map\Map.cpp" />
+    <ClCompile Include="source\MyGame.cpp" />
+    <ClCompile Include="source\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="source\UI.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="gfc\gfc.vcxproj">
@@ -190,8 +200,16 @@ $(LocalDebuggerEnvironment)</LocalDebuggerEnvironment>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MyGame.h" />
-    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="headers\DecisionMaker.h" />
+    <ClInclude Include="headers\Dialogbox.h" />
+    <ClInclude Include="headers\Enemy.h" />
+    <ClInclude Include="headers\Intersection.h" />
+    <ClInclude Include="headers\Map\Map.h" />
+    <ClInclude Include="headers\MyGame.h" />
+    <ClInclude Include="headers\PathFinder.h" />
+    <ClInclude Include="headers\player.h" />
+    <ClInclude Include="headers\UI.h" />
+    <ClInclude Include="source\stdafx.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
