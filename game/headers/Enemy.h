@@ -43,7 +43,7 @@ public:
 	bool IsDead;
 	bool isPatroling;
 	bool isEnemyStaticPos;
-
+	int enemyType;
 
 private:
 	//Hp bars
@@ -55,7 +55,7 @@ private:
 	enum enemyStates { IDLE, PATROL, CHASE, ATTACK, RETURNTOPOS};
 	int lastState;
 	enum enemyType {CAT, DOG, HUMAN};
-	int enemyType;
+	
 	bool playerChasingLastSpot = false;
 
 	float currentHp, maxHp;

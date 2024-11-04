@@ -60,7 +60,7 @@ private:
 
 	Map& map;
 
-
+	CVector saveLastPlayerVelocityVector;
 	//bufs flags
 	std::vector<bool> buffFlags;
 	std::vector<float> buffReaminingTime;

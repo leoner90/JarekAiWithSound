@@ -53,11 +53,15 @@ void Player::gameInit()
 	attackDellayTimer = 0;
 	if (!currentWaypoint.empty())
 		currentWaypoint.clear();
+
+	saveLastPlayerVelocityVector = { 0,100 };
 }
 
 void Player::Update(float time, std::vector<Enemy*>& enemiesRef)
 {
 	if (IsDead) return;
+	if (playerSprite->GetSpeed() != 0)
+		saveLastPlayerVelocityVector = playerSprite->GetVelocity();
 	AllEnemies = enemiesRef;
 	mpRegen(time);
 	if (isAttacking)
@@ -156,6 +160,7 @@ void Player::Animation()
 void Player::Attack(float time)
 {
 	isAttacking = false;
+
 	//attack electricalPanel
 	if (playerSprite->GetX() > 1840 && playerSprite->GetY() < 150 && map.globalLight)
 	{
@@ -164,17 +169,14 @@ void Player::Attack(float time)
 		map.globalLight = false;
 	}
 		
-	std::cout << "Enemy count: " << AllEnemies.size() << std::endl;
-	for (auto enemy : AllEnemies)
-	{
-		cout << "da" << endl;
-	}
+ 
 	//all enemies on front + distance less then 80 getting damage
 	for (auto enemy : AllEnemies)
 	{
 		if (Distance(enemy->enemySprite->GetPos(), playerSprite->GetPos()) > 60) 
 			continue;
 
+	
 		//is enemy on fron of player sprite, depends on sprite rotation
 		float playerRotation = playerSprite->GetRotation() * (M_PI / 180.0f); // to radians
 		CVector playerForward(cos(playerRotation), sin(playerRotation)); // player Forward Vector
@@ -183,7 +185,7 @@ void Player::Attack(float time)
 		float dotProduct = Dot(playerForward, directionToEnemy.Normalize());
 
 		cout << dotProduct;
-		bool isPlayerFacingEnemy = true;// dotProduct >= -1.f; 
+		bool isPlayerFacingEnemy =  dotProduct >= 0.7f; 
 
 		//if facing each other and distance < 50
 		if (isPlayerFacingEnemy)

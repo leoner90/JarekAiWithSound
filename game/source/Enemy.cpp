@@ -55,7 +55,7 @@ void Enemy::Update(float time)
 	Animation();
 	enemySprite->Update(time);
 
-	bool canSee = DecisionMaker::SpotPlayer(player.playerSprite->GetPos(), enemySprite->GetPos());
+	bool canSee = DecisionMaker::SpotPlayer(player.playerSprite->GetPos(), *enemySprite, enemyType);
 	if (player.isPlayerHidden) canSee = false;
 
 	//DOG CALL TO LAST PLAYER POS
@@ -96,7 +96,7 @@ void Enemy::Update(float time)
 
 void Enemy::Chassing(float gametime)
 {
-	bool canSee = DecisionMaker::SpotPlayer(player.playerSprite->GetPos(), enemySprite->GetPos());
+	bool canSee = DecisionMaker::SpotPlayer(player.playerSprite->GetPos(), *enemySprite, enemyType);
  
 	if (player.isPlayerHidden) 
 		canSee = false;
@@ -153,7 +153,7 @@ void Enemy::Chassing(float gametime)
 
 void Enemy::Attack(float time)
 {
-	bool canSee = DecisionMaker::SpotPlayer(player.playerSprite->GetPos(), enemySprite->GetPos());
+	bool canSee = DecisionMaker::SpotPlayer(player.playerSprite->GetPos(), *enemySprite, enemyType);
 	if (player.isPlayerHidden) canSee = false;
 
 	if (enemySprite->GetStatus() == CHASE && Distance(enemySprite->GetPos(), player.playerSprite->GetPos()) < 50)
