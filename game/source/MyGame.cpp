@@ -62,7 +62,7 @@ void CMyGame::OnDraw(CGraphics* g)
 	{
 		mainMap.Draw(g, player.playerSprite->GetPosition());
 		for (auto AIplayer : AllEnemies)   AIplayer->Draw(g);
-		player.Draw(g);
+		player.Draw(g, GetTime());
 	}
 }
 
@@ -229,7 +229,7 @@ void CMyGame::OnRButtonDown(Uint16 x, Uint16 y)
 {
 	////*** CALL PLAYER ON KEY DOWN IF NOT IN MENU MODE OR PAUSE
 	if (!IsMenuMode() && !IsPaused() && !gameOver)
-		player.OnRButtonDown(x, y);
+		player.OnRButtonDown(x, y, GetTime());
 }
 
 void CMyGame::OnRButtonUp(Uint16 x, Uint16 y)

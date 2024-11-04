@@ -3,7 +3,7 @@
 #include "Map/Map.h"
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!to see all the nodes on the map
-bool EnableNodes = false;
+bool EnableNodes = true;
 
 //CONSTRUCTOR 
 PathFinder::PathFinder(Map& m) : map(m)
@@ -101,14 +101,15 @@ PathFinder::~PathFinder()
 
 std::vector <CVector> PathFinder::PathSmoothing(std::vector <CVector> currentWaypoints, CSprite& entity)
 {
+
 	if (currentWaypoints.size() <= 1) return currentWaypoints;
 	bool hasObstacle = false;
 
 	// Check each obstacle to see if there’s an intersection
 	for (auto obstacle : map.checkObects) 
 	{
-		CVector bottomPoint = CVector(entity.GetLeft(), entity.GetBottom());
-		CVector topPoint = CVector(entity.GetRight(), entity.GetTop());
+		CVector bottomPoint = CVector(entity.GetLeft(), entity.GetBottom() );
+		CVector topPoint = CVector(entity.GetRight(), entity.GetTop() );
 		if (Intersection::FindIntersection(bottomPoint, currentWaypoints[1],
 			CVector(obstacle->GetLeft(), obstacle->GetTop()),
 			CVector(obstacle->GetRight(), obstacle->GetBottom())) ||
@@ -129,7 +130,8 @@ std::vector <CVector> PathFinder::PathSmoothing(std::vector <CVector> currentWay
 		{
 			hasObstacle = true;
 			break;
-		}*/
+		}
+		*/
 	}
 
 	if (!hasObstacle)

@@ -299,6 +299,7 @@ void Enemy::callForAlert(float gameTime)
 	{
 		ShowDialogBox("HELP, I NEED IT!", gameTime);
 		currentWaypoints.clear();
+		enemySprite->SetVelocity(0, 0);
 		saveCurrentPos = enemySprite->GetPos();
 		currentWaypoints = PathFinder::Move(1200, 1200, enemySprite->GetPos(), false);
 		isInCallForHelp = true;

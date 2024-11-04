@@ -9,9 +9,6 @@ Player::Player(Map& map) : PathFinder(map), map(map)
 	mainGoalCheese.SetImage("Cheese.png");
 	mainGoalCheese.SetSize(50, 50);
 
-
-
-
 	//player
 	playerSprite = new CSprite;
 	playerSprite->AddImage("player.png", "Walk", 7, 4, 3, 1, 3, 0, CColor::Blue());
@@ -19,6 +16,11 @@ Player::Player(Map& map) : PathFinder(map), map(map)
 	playerSprite->SetAnimation("Idle");
 	damage = 50;
 
+	//mouse
+	movementPos.LoadImage("movementPos.png");
+	movementPos.SetImage("movementPos.png");
+	movementPos.SetSize(35, 35);
+	movementPos.SetColorKey(CColor::White());
 }
 
 Player::~Player()
@@ -55,6 +57,10 @@ void Player::gameInit()
 		currentWaypoint.clear();
 
 	saveLastPlayerVelocityVector = { 0,100 };
+
+
+	showMovementPosTimer = 0;
+ 
 }
 
 void Player::Update(float time, std::vector<Enemy*>& enemiesRef)
@@ -86,22 +92,30 @@ void Player::Update(float time, std::vector<Enemy*>& enemiesRef)
 	buffReaminingTime = { time - hideBuffTimer, time - speedBuffTimer };
 }
 
-void Player::Draw(CGraphics* g)
+void Player::Draw(CGraphics* g, float time)
 {
 	if (IsDead) return;
+
+	//cursor where to go
+	if (showMovementPosTimer > time)
+		movementPos.Draw(g);
+
 	playerSprite->Draw(g);
-	for (auto obj : testNodes) obj->Draw(g);
+
+
+	for (auto obj : testNodes) 
+		obj->Draw(g);
+
 	if (!currentWaypoint.empty())
 			g->DrawLine(CVector(playerSprite->GetRight(), playerSprite->GetBottom()), currentWaypoint[0], 4, CColor::Red());
 
 	CVector SaveOfset = g->GetScrollPos();
 	if(!IsCheeseObtained)
 		mainGoalCheese.Draw(g);
+
+	
+
 	g->SetScrollPos(0, 0);
-
-
-
- 
 	UI::DrawUI(g, buffFlags, buffReaminingTime);
 	g->SetScrollPos(SaveOfset);
 }
@@ -185,7 +199,7 @@ void Player::Attack(float time)
 		float dotProduct = Dot(playerForward, directionToEnemy.Normalize());
 
 		cout << dotProduct;
-		bool isPlayerFacingEnemy =  dotProduct >= 0.7f; 
+		bool isPlayerFacingEnemy = true; // dotProduct >= 0.7f; 
 
 		//if facing each other and distance < 50
 		if (isPlayerFacingEnemy)
@@ -263,9 +277,15 @@ void Player::mpRegen(float time)
 
  
  
-void Player::OnRButtonDown(Uint16 x, Uint16 y)
+void Player::OnRButtonDown(Uint16 x, Uint16 y, float gameTime)
 {
 	playerSprite->SetVelocity(0, 0);
 	playerSprite->SetStatus(IDLE);
 	currentWaypoint = PathFinder::Move(x,y, playerSprite->GetPos(),true);
+	if (!currentWaypoint.empty())
+	{
+		movementPos.SetPos(currentWaypoint.back());
+		showMovementPosTimer = gameTime + 500;
+	}
+		
 }

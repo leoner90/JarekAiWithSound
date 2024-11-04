@@ -11,10 +11,10 @@ public:
 	Player(Map& map);
 	~Player();
 	void gameInit();
-	void Draw(CGraphics* g);
+	void Draw(CGraphics* g, float time);
 	void Update(float time, std::vector<Enemy*>& enemiesRef);
 	
-	void OnRButtonDown(Uint16 x, Uint16 y);
+	void OnRButtonDown(Uint16 x, Uint16 y, float gameTime);
 	void MoveToWaypoint();
 	void Animation();
 	void Attack(float time);
@@ -64,6 +64,9 @@ private:
 	//bufs flags
 	std::vector<bool> buffFlags;
 	std::vector<float> buffReaminingTime;
+
+	CSprite movementPos;
+	float showMovementPosTimer;
 
 	CSoundPlayer  lightOff;
 	CSoundPlayer  obtainCheese;
