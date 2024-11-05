@@ -15,6 +15,7 @@ Enemy::Enemy(Map& map, Player& p, CSprite& eSprite, CVector initPos, int type)
 	enemySprite->SetPosition(initPos);
 	enemySprite->SetDirection(90);
 	enemySprite->SetSpeed(0);
+	enemySprite->ClearColorKey();
 	enemySprite->SetAnimation("Idle", 6);
 	enemySprite->SetStatus(PATROL);
 
@@ -38,6 +39,7 @@ Enemy::Enemy(Map& map, Player& p, CSprite& eSprite, CVector initPos, int type)
 	bool isInCallForHelp = false;
 	if (type == HUMAN || type == DOG)
 	{
+		enemySprite->SetAnimation("Idle", 4);
 		enemySprite->SetStatus(IDLE);
 		isEnemyStaticPos = true;
 		saveStaticPos = initPos;

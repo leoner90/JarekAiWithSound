@@ -5,19 +5,25 @@ CMyGame::CMyGame(void) : mainMap(), player(mainMap)
 {
 	//PREFABS
 	catSpritePrefab = new CSprite();
-	catSpritePrefab->AddImage("catSprite.png", "Walk", 36, 1, 0, 0, 6, 0, CColor::Red());
-	catSpritePrefab->AddImage("catSprite.png", "Attack", 36, 1, 7, 0, 15, 0, CColor::Red());
-	catSpritePrefab->AddImage("catSprite.png", "Idle", 36, 1, 16, 0, 35, 0, CColor::Red());
+	catSpritePrefab->AddImage("catSprite.png", "Walk", 36, 1, 0, 0, 6, 0);
+	catSpritePrefab->AddImage("catSprite.png", "Attack", 36, 1, 7, 0, 15, 0);
+	catSpritePrefab->AddImage("catSprite.png", "Idle", 36, 1, 16, 0, 35, 0);
+
+	cat2SpritePrefab = new CSprite();
+	cat2SpritePrefab->AddImage("catSprite2.png", "Walk", 36, 1, 0, 0, 6, 0);
+	cat2SpritePrefab->AddImage("catSprite2.png", "Attack", 36, 1, 7, 0, 15, 0);
+	cat2SpritePrefab->AddImage("catSprite2.png", "Idle", 36, 1, 16, 0, 35, 0);
+
  
 	dogSpritePrefab = new CSprite();
-	dogSpritePrefab->AddImage("dogSprite.png", "Attack", 35, 1, 0, 0, 7, 0, CColor::Red());
-	dogSpritePrefab->AddImage("dogSprite.png", "Walk", 35, 1, 8, 0, 15, 0, CColor::Red());
-	dogSpritePrefab->AddImage("dogSprite.png", "Idle", 35, 1, 16, 0, 34, 0, CColor::Red());
+	dogSpritePrefab->AddImage("dogSprite.png", "Attack", 36, 1, 0, 0, 7, 0  );
+	dogSpritePrefab->AddImage("dogSprite.png", "Walk", 36, 1, 8, 0, 15, 0  );
+	dogSpritePrefab->AddImage("dogSprite.png", "Idle", 36, 1, 16, 0, 35, 0 );
 
 
 	humanSpritePrefab = new CSprite();
-	humanSpritePrefab->AddImage("human.png", "Walk", 2, 3, 0, 2, 0, 0, CColor::Blue());
-	humanSpritePrefab->AddImage("human.png", "Idle", 2, 3, 0, 2, 0, 0, CColor::Blue());
+	humanSpritePrefab->AddImage("human.png", "Walk", 2, 4, 0, 3, 0, 1, CColor::White());
+	humanSpritePrefab->AddImage("human.png", "Idle", 2, 4, 0, 3, 0, 1, CColor::White());
 	
 }
 
@@ -322,7 +328,7 @@ void CMyGame::EnemyCreator()
 	enum enemyType { CAT, DOG, HUMAN };
  
 	Enemy* cat1 = new Enemy(mainMap, player, *catSpritePrefab->Clone(),CVector(350, 650), CAT);
-	Enemy* cat2 = new Enemy(mainMap, player, *catSpritePrefab->Clone(), CVector(1840, 330), CAT);
+	Enemy* cat2 = new Enemy(mainMap, player, *cat2SpritePrefab->Clone(), CVector(1840, 330), CAT);
 	Enemy* dog = new Enemy(mainMap, player, *dogSpritePrefab->Clone(), CVector(1200, 1200), DOG);
 	Enemy* human = new Enemy(mainMap, player, *humanSpritePrefab->Clone(), CVector(1720, 1410), HUMAN);
 

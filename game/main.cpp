@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
 	app.OpenWindow(1024, 768, "Cheddar Heist!");
 	//app.OpenFullScreen(800, 600, 24);
 	app.OpenConsole();
-	app.SetClearColor(CColor::White());
+	app.SetClearColor(CColor::Black());
 	app.Run(&game);
 	return(0);
 }

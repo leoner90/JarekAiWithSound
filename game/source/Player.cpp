@@ -11,8 +11,9 @@ Player::Player(Map& map) : PathFinder(map), map(map)
 
 	//player
 	playerSprite = new CSprite;
-	playerSprite->AddImage("player.png", "Walk", 7, 4, 3, 1, 3, 0, CColor::Blue());
-	playerSprite->AddImage("player.png", "Idle",  7, 4, 0, 3, 3, 1, CColor::Blue());
+	playerSprite->AddImage("player.png", "Idle", 31, 1, 0, 0, 14, 0);
+	playerSprite->AddImage("player.png", "Walk", 31, 1, 16, 0, 23, 0);
+	playerSprite->AddImage("player.png", "Attack",  31, 1, 24, 0, 30, 0);
 	playerSprite->SetAnimation("Idle");
 	damage = 50;
 

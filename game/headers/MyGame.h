@@ -64,6 +64,7 @@ public:
 
 	//prefabs  
 	CSprite* catSpritePrefab;
+	CSprite* cat2SpritePrefab;
 	CSprite* dogSpritePrefab;
 	CSprite* humanSpritePrefab;
 
