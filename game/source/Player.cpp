@@ -141,6 +141,7 @@ void Player::MoveToWaypoint()
 			playerSprite->SetRotation(playerSprite->GetDirection() - 0);
 		}
 
+	
 		// Stop on the arriving to dest
 		if ((playerSprite->GetPosition() - currentWaypoint.back()).Length() < 30)
 		{
@@ -148,6 +149,19 @@ void Player::MoveToWaypoint()
 			currentWaypoint.clear();
 			playerSprite->SetVelocity(0, 0);
 		}
+
+		
+	
+		/*
+		CVector v = currentWaypoint.front() - playerSprite->GetPosition();
+		if (Dot(playerSprite->GetVelocity(), v) < 0)
+		{
+			currentWaypoint.erase(currentWaypoint.begin());
+			playerSprite->SetStatus(IDLE);
+		 
+			playerSprite->SetVelocity(0, 0);
+		}
+		*/
 	}
 
 	//baffs
@@ -190,16 +204,15 @@ void Player::Attack(float time)
 		if (Distance(enemy->enemySprite->GetPos(), playerSprite->GetPos()) > 60) 
 			continue;
 
-	
 		//is enemy on fron of player sprite, depends on sprite rotation
 		float playerRotation = playerSprite->GetRotation() * (M_PI / 180.0f); // to radians
-		CVector playerForward(cos(playerRotation), sin(playerRotation)); // player Forward Vector
+		CVector playerForward(sin(playerRotation), cos(playerRotation)); // player Forward Vector
 		CVector directionToEnemy = enemy->enemySprite->GetPos() - playerSprite->GetPos(); // directional Vector
 		
 		float dotProduct = Dot(playerForward, directionToEnemy.Normalize());
 
 		cout << dotProduct;
-		bool isPlayerFacingEnemy = true; // dotProduct >= 0.7f; 
+		bool isPlayerFacingEnemy = dotProduct >= 0.5f; 
 
 		//if facing each other and distance < 50
 		if (isPlayerFacingEnemy)

@@ -85,6 +85,11 @@ void Enemy::Update(float time)
 		return;
 	}
 
+	//basicly rotate cat to player if it's allready seen , to fix a bag that during attack player can just run behind the cat and cat starts patroling
+	if (Distance(enemySprite->GetPos(), player.playerSprite->GetPos()) < 100 && !player.isPlayerHidden)
+		enemySprite->SetDirection(player.playerSprite->GetPos() - enemySprite->GetPos());
+
+
 	Attack(time);//ATTACK
 	Chassing(time); //CHASE
 

@@ -13,6 +13,9 @@ public:
 	bool IsPlaceAllowed(CVector mousePos);
 
 	std::vector <CVector>  PathSmoothing(std::vector <CVector> currentWaypoints, CSprite& entity);
+	std::vector <CVector>  PathSmoothingUpdate(std::vector <CVector> currentWaypoints);
+
+	bool canSeeNextNode(CVector initVectorPos, std::vector <CVector> *currentWaypoints, int deleteStartIndex);
 	std::vector <CVector> Move(Uint16 x, Uint16 y, CVector entityPos, bool mapOfscroll);
 
 	//AI

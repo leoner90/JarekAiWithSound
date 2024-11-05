@@ -105,38 +105,113 @@ std::vector <CVector> PathFinder::PathSmoothing(std::vector <CVector> currentWay
 	if (currentWaypoints.size() <= 1) return currentWaypoints;
 	bool hasObstacle = false;
 
+
+	// Initialize the bounding box for the player sprite
+	CVector LeftTop = CVector(entity.GetX() - 30, entity.GetY() + 30);
+	CVector LeftBottom = CVector(entity.GetX() - 30, entity.GetY() - 30);
+	CVector RightTop = CVector(entity.GetX() + 30, entity.GetY() + 30);
+	CVector RightBottom = CVector(entity.GetX() + 30, entity.GetY() - 30);
+
 	// Check each obstacle to see if there’s an intersection
 	for (auto obstacle : map.checkObects) 
 	{
-		CVector bottomPoint = CVector(entity.GetLeft(), entity.GetBottom() );
-		CVector topPoint = CVector(entity.GetRight(), entity.GetTop() );
-		if (Intersection::FindIntersection(bottomPoint, currentWaypoints[1],
-			CVector(obstacle->GetLeft(), obstacle->GetTop()),
-			CVector(obstacle->GetRight(), obstacle->GetBottom())) ||
-			Intersection::FindIntersection(bottomPoint, currentWaypoints[1],
-				CVector(obstacle->GetLeft(), obstacle->GetBottom()),
-				CVector(obstacle->GetRight(), obstacle->GetTop())))
+		std::vector<CVector> obstacleCorners = 
+		{
+			CVector(obstacle->GetLeft(), obstacle->GetTop()),    // Top-left
+			CVector(obstacle->GetLeft(), obstacle->GetBottom()), // Bottom-left
+			CVector(obstacle->GetRight(), obstacle->GetTop()),   // Top-right
+			CVector(obstacle->GetRight(), obstacle->GetBottom()) // Bottom-right
+		};
+
+		if 
+			(
+				Intersection::FindIntersection(LeftTop, currentWaypoints[1], obstacleCorners[0], obstacleCorners[3]) ||
+				Intersection::FindIntersection(LeftTop, currentWaypoints[1], obstacleCorners[1], obstacleCorners[2]) ||
+				Intersection::FindIntersection(LeftBottom, currentWaypoints[1], obstacleCorners[0], obstacleCorners[3]) ||
+				Intersection::FindIntersection(LeftBottom, currentWaypoints[1], obstacleCorners[1], obstacleCorners[2]) ||
+				Intersection::FindIntersection(RightTop, currentWaypoints[1], obstacleCorners[0], obstacleCorners[3]) ||
+				Intersection::FindIntersection(RightTop, currentWaypoints[1], obstacleCorners[1], obstacleCorners[2]) ||
+				Intersection::FindIntersection(RightBottom, currentWaypoints[1], obstacleCorners[0], obstacleCorners[3]) ||
+				Intersection::FindIntersection(RightBottom, currentWaypoints[1], obstacleCorners[1], obstacleCorners[2])
+			)
 		{
 			hasObstacle = true;
 			break;
 		}
-		/*
-		if (Intersection::FindIntersection(topPoint, currentWaypoints[1],
-			CVector(obstacle->GetLeft(), obstacle->GetTop()),
-			CVector(obstacle->GetRight(), obstacle->GetBottom())) ||
-			Intersection::FindIntersection(topPoint, currentWaypoints[1],
-				CVector(obstacle->GetLeft(), obstacle->GetBottom()),
-				CVector(obstacle->GetRight(), obstacle->GetTop())))
-		{
-			hasObstacle = true;
-			break;
-		}
-		*/
 	}
 
 	if (!hasObstacle)
 		currentWaypoints.erase(currentWaypoints.begin());
 
+	return currentWaypoints;
+}
+
+
+bool PathFinder::canSeeNextNode(CVector initVector, vector<CVector>* currentWaypoints, int deleteStartIndex)
+{
+	cout << deleteStartIndex << endl;
+	bool hasObstacle = false;
+
+	// Initialize the bounding box for the player sprite
+	CVector LeftTop = CVector(initVector.GetX() - 30, initVector.GetY() + 30);
+	CVector LeftBottom = CVector(initVector.GetX() - 30, initVector.GetY() - 30);
+	CVector RightTop = CVector(initVector.GetX() + 30, initVector.GetY() + 30);
+	CVector RightBottom = CVector(initVector.GetX() + 30, initVector.GetY() - 30);
+
+	// Iterate through the waypoints in reverse order
+	for (int i = currentWaypoints->size() - 1; i > 1; i--)
+	{
+		cout << i << endl;
+		// Check each obstacle for intersections
+		for (auto obstacle : map.checkObects)
+		{
+	
+			vector<CVector> obstacleCorners =
+			{
+				CVector(obstacle->GetLeft(), obstacle->GetTop()),    // Top-left
+				CVector(obstacle->GetLeft(), obstacle->GetBottom()), // Bottom-left
+				CVector(obstacle->GetRight(), obstacle->GetTop()),   // Top-right
+				CVector(obstacle->GetRight(), obstacle->GetBottom()) // Bottom-right
+			};
+
+			if (Intersection::FindIntersection(LeftTop, (*currentWaypoints)[i], obstacleCorners[0], obstacleCorners[3]) ||
+				Intersection::FindIntersection(LeftTop, (*currentWaypoints)[i], obstacleCorners[1], obstacleCorners[2]) ||
+				Intersection::FindIntersection(LeftBottom, (*currentWaypoints)[i], obstacleCorners[0], obstacleCorners[3]) ||
+				Intersection::FindIntersection(LeftBottom, (*currentWaypoints)[i], obstacleCorners[1], obstacleCorners[2]) ||
+				Intersection::FindIntersection(RightTop, (*currentWaypoints)[i], obstacleCorners[0], obstacleCorners[3]) ||
+				Intersection::FindIntersection(RightTop, (*currentWaypoints)[i], obstacleCorners[1], obstacleCorners[2]) ||
+				Intersection::FindIntersection(RightBottom, (*currentWaypoints)[i], obstacleCorners[0], obstacleCorners[3]) ||
+				Intersection::FindIntersection(RightBottom, (*currentWaypoints)[i], obstacleCorners[1], obstacleCorners[2])
+				)
+			{
+				cout << "DELETE";
+				hasObstacle = true;
+				break;
+			}
+		}
+
+		// If no obstacle is found, delete the waypoints between index 1 and i
+		if (!hasObstacle)
+		{
+			cout << "del-" << deleteStartIndex + 1 << "deltw" << +i  << endl;
+			currentWaypoints->erase(currentWaypoints->begin() + deleteStartIndex + 1   , currentWaypoints->begin() + i   );
+			break;
+			return true; 
+
+		}
+	}
+
+	return false;
+}
+
+vector<CVector> PathFinder::PathSmoothingUpdate(vector<CVector> currentWaypoints)
+{
+	int i = 0;
+	while (i < currentWaypoints.size() - 2)
+	{
+		bool isSomethingDeleted = canSeeNextNode(currentWaypoints[i], &currentWaypoints, i );
+		i += !isSomethingDeleted; // Increment i if nothing was deleted
+	}
 	return currentWaypoints;
 }
 
@@ -230,6 +305,7 @@ bool PathFinder::IsPlaceAllowed(CVector mousePos)
 	return true;
 }
 
+
 //********* on mouse click action, returns CVectors array
 std::vector <CVector> PathFinder::Move(Uint16 x, Uint16 y, CVector entityPos, bool mapOfscroll)
 {
@@ -263,6 +339,7 @@ std::vector <CVector> PathFinder::Move(Uint16 x, Uint16 y, CVector entityPos, bo
 
 	// call the path finding algorithm to complete the waypoints
 	vector<int> path;
+
 	if (PathFind(nFirst, nLast, path))
 	{
 		for (int nodeI : path)
@@ -270,7 +347,23 @@ std::vector <CVector> PathFinder::Move(Uint16 x, Uint16 y, CVector entityPos, bo
 		m_waypoints.push_back(dest); //+ finall coordinate where mouse where clicked
 	}
 
-	return m_waypoints;
+
+	m_waypoints.insert(m_waypoints.begin(), entityPos); // add start player pos, to calculate correct path smooth
+
+	for (auto point : m_waypoints)
+		cout << "X " << point.GetX() << " Y " << point.GetY() << endl ;
+	cout << endl << endl << endl;
+
+	vector<CVector> smoothPath = PathSmoothingUpdate(m_waypoints);
+
+	smoothPath.erase(smoothPath.begin()); //delete start player pos
+
+	
+
+	for (auto point : smoothPath)
+		cout << "X " << point.GetX() << " Y " << point.GetY() << endl;
+
+	return smoothPath;
 }
 
 std::vector<CVector> PathFinder::GenerateAiPatrolPoints(CVector currentAiPos)
