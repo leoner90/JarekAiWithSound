@@ -32,7 +32,7 @@ void Player::gameInit()
 {
 	mainGoalCheese.SetPosition(1800, 1420);
 	playerSprite->SetStatus(IDLE);
-	playerSprite->SetPosition(350, 250);
+	playerSprite->SetPosition(380, 100);
 	playerSprite->SetSpeed(0);
 	playerSprite->SetDirection(90);
 
@@ -48,6 +48,7 @@ void Player::gameInit()
 
 	isPlayerHidden = false;
 	hideBuffTimer = 0;
+	attackAnimationTimer = 0;
 
 	isGameWon = false;
 
@@ -57,25 +58,20 @@ void Player::gameInit()
 	if (!currentWaypoint.empty())
 		currentWaypoint.clear();
 
-	saveLastPlayerVelocityVector = { 0,100 };
-
-
 	showMovementPosTimer = 0;
- 
 }
 
 void Player::Update(float time, std::vector<Enemy*>& enemiesRef)
 {
 	if (IsDead) return;
-	if (playerSprite->GetSpeed() != 0)
-		saveLastPlayerVelocityVector = playerSprite->GetVelocity();
 	AllEnemies = enemiesRef;
 	mpRegen(time);
-	if (isAttacking)
+	if (isAttacking) 
 		Attack(time);
 	buffResets(time);
 	MoveToWaypoint();
 
+	if (attackAnimationTimer < time && playerSprite->GetStatus() == ATTACK)  	playerSprite->SetStatus(IDLE);
 	Animation();
 	playerSprite->Update(time);
 
@@ -97,6 +93,26 @@ void Player::Draw(CGraphics* g, float time)
 {
 	if (IsDead) return;
 
+	// Draw Path
+	if (!currentWaypoint.empty())
+	{
+		for (int i = 0; i < currentWaypoint.size(); i++)
+		{
+			CVector segmentStart = (i == 0) ? playerSprite->GetPos() : currentWaypoint[i - 1];
+			CVector segmentEnd = currentWaypoint[i];
+
+			CVector directionalV = segmentEnd - segmentStart;
+			int numSteps = 10;
+			CVector step = directionalV.Normalise() * (directionalV.Length() / numSteps);
+
+			for (int j = 0; j <= numSteps; j++)
+			{
+				CVector pointAlongLine = segmentStart + step * j;
+				g->FillCircle(pointAlongLine, 2, CColor::DarkRed());
+			}
+		}
+	}
+
 	//cursor where to go
 	if (showMovementPosTimer > time)
 		movementPos.Draw(g);
@@ -107,8 +123,8 @@ void Player::Draw(CGraphics* g, float time)
 	for (auto obj : testNodes) 
 		obj->Draw(g);
 
-	if (!currentWaypoint.empty())
-			g->DrawLine(CVector(playerSprite->GetRight(), playerSprite->GetBottom()), currentWaypoint[0], 4, CColor::Red());
+
+
 
 	CVector SaveOfset = g->GetScrollPos();
 	if(!IsCheeseObtained)
@@ -126,7 +142,7 @@ void Player::MoveToWaypoint()
 	if (!currentWaypoint.empty()) 
 	{
 		CVector anyChanges = currentWaypoint[0];
-		currentWaypoint = PathFinder::PathSmoothing(currentWaypoint, *playerSprite);
+		currentWaypoint = PathFinder::PathSmoothing(currentWaypoint, playerSprite->GetPos(), playerSprite);
 		CVector destinationToFisrtWP = currentWaypoint.front() -  playerSprite->GetPosition();
 
 		//if there was any changes after PathSmoothing, reset speed to set new direction bellow
@@ -142,27 +158,14 @@ void Player::MoveToWaypoint()
 			playerSprite->SetRotation(playerSprite->GetDirection() - 0);
 		}
 
-	
-		// Stop on the arriving to dest
-		if ((playerSprite->GetPosition() - currentWaypoint.back()).Length() < 30)
+		if (Distance(playerSprite->GetPos(), currentWaypoint.back()) <= 25)
 		{
 			playerSprite->SetStatus(IDLE);
 			currentWaypoint.clear();
 			playerSprite->SetVelocity(0, 0);
 		}
 
-		
-	
-		/*
-		CVector v = currentWaypoint.front() - playerSprite->GetPosition();
-		if (Dot(playerSprite->GetVelocity(), v) < 0)
-		{
-			currentWaypoint.erase(currentWaypoint.begin());
-			playerSprite->SetStatus(IDLE);
-		 
-			playerSprite->SetVelocity(0, 0);
-		}
-		*/
+	 
 	}
 
 	//baffs
@@ -182,6 +185,9 @@ void Player::Animation()
 	if (playerSprite->GetStatus() == WALK) {
 		playerSprite->SetAnimation("Walk", 8);
 	}
+	else if (playerSprite->GetStatus() == ATTACK) {
+		playerSprite->SetAnimation("Attack", 16);
+	}
 	lastState = playerSprite->GetStatus();
 
 }
@@ -189,6 +195,10 @@ void Player::Animation()
 void Player::Attack(float time)
 {
 	isAttacking = false;
+	attackAnimationTimer = time + 500;
+	playerSprite->SetStatus(ATTACK);
+	currentWaypoint.clear();
+	playerSprite->SetVelocity(0, 0);
 
 	//attack electricalPanel
 	if (playerSprite->GetX() > 1840 && playerSprite->GetY() < 150 && map.globalLight)
@@ -198,7 +208,6 @@ void Player::Attack(float time)
 		map.globalLight = false;
 	}
 		
- 
 	//all enemies on front + distance less then 80 getting damage
 	for (auto enemy : AllEnemies)
 	{
@@ -212,7 +221,6 @@ void Player::Attack(float time)
 		
 		float dotProduct = Dot(playerForward, directionToEnemy.Normalize());
 
-		cout << dotProduct;
 		bool isPlayerFacingEnemy = dotProduct >= 0.5f; 
 
 		//if facing each other and distance < 50
@@ -250,7 +258,7 @@ void Player::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode, float time)
 	if (sym == SDLK_w && currentMp >= 20 && !isPlayerHidden)
 	{
 		currentMp -= 50;
-		hideBuffTimer = time + 2000;
+		hideBuffTimer = time + 3000;
 		isPlayerHidden = true;
 		hideSkill.Play("vanish.wav", 0);
 	}

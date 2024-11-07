@@ -54,7 +54,7 @@ bool DecisionMaker::SpotPlayer(CVector playerPos, CSprite& enemy, int enemyType)
 
 void DecisionMaker::ChasePlayer(CVector playerPos, CVector enemyPos)
 {
-	cout << chassing << endl;
+
 }
 
 void DecisionMaker::ReturnToBaseState()

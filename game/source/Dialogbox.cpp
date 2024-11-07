@@ -36,11 +36,9 @@ void Dialogbox::Draw(CGraphics* g, CVector entityPos)
 
 void Dialogbox::ShowDialogBox(string text, float gametime)
 {
-	if (textHolder != text)
-	{
+ 
 		isDialogBoxOpen = true;
 		textHolder = text;
 		dialogBoxTimer = gametime + 1500;
-	}
-	
+ 
 }

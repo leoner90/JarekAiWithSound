@@ -3,11 +3,14 @@
 #include "Map/Map.h"
 
 //!!!!!!!!!!!!!!!!!!!!!!!!!!!to see all the nodes on the map
-bool EnableNodes = true;
+
 
 //CONSTRUCTOR 
 PathFinder::PathFinder(Map& m) : map(m)
 {
+	//for testing
+	EnableNodesVisual = false;
+
 	//NODES pivot points
 	float Coords[][2] = {
 		// Bathroom (5 points)
@@ -35,7 +38,7 @@ PathFinder::PathFinder(Map& m) : map(m)
 		// First Room Bottom connections
 		{6, 7}, {6, 8}, {6, 9}, {7, 10}, {8, 9}, {8, 11}, {9, 13}, {9, 12},
 		// First Room Top connections
-		{10, 11}, {11, 12}, {12, 13}, {12, 11},
+		{10, 11}, {11, 12}, {12, 13},
 		// Corridor Between Rooms connections
 		{13, 14}, {14, 15}, {14, 19}, {14, 25},
 		// Room Two - Top connections
@@ -71,7 +74,7 @@ PathFinder::PathFinder(Map& m) : map(m)
 	}
 
 	///just For testing
-	if(EnableNodes)
+	if(EnableNodesVisual)
 	for (auto x : Coords)
 	{
 		CSprite* newObj = new CSprite();
@@ -94,23 +97,21 @@ PathFinder::~PathFinder()
 
 	for (auto node : testNodes)
 		delete node;
-	testNodes.clear();
-
- 
+	testNodes.clear(); 
 }
 
-std::vector <CVector> PathFinder::PathSmoothing(std::vector <CVector> currentWaypoints, CSprite& entity)
-{
 
+std::vector <CVector> PathFinder::PathSmoothing(std::vector <CVector> currentWaypoints, CVector entityPos, CSprite* entity)
+{
 	if (currentWaypoints.size() <= 1) return currentWaypoints;
 	bool hasObstacle = false;
-
-
+	float scpriteHalfSizeOffset = 30;
 	// Initialize the bounding box for the player sprite
-	CVector LeftTop = CVector(entity.GetX() - 30, entity.GetY() + 30);
-	CVector LeftBottom = CVector(entity.GetX() - 30, entity.GetY() - 30);
-	CVector RightTop = CVector(entity.GetX() + 30, entity.GetY() + 30);
-	CVector RightBottom = CVector(entity.GetX() + 30, entity.GetY() - 30);
+	CVector LeftTop = CVector(entityPos.GetX() - scpriteHalfSizeOffset, entityPos.GetY() + scpriteHalfSizeOffset);
+	CVector LeftBottom = CVector(entityPos.GetX() - scpriteHalfSizeOffset, entityPos.GetY() - scpriteHalfSizeOffset);
+	CVector RightTop = CVector(entityPos.GetX() + scpriteHalfSizeOffset, entityPos.GetY() + scpriteHalfSizeOffset);
+	CVector RightBottom = CVector(entityPos.GetX() + scpriteHalfSizeOffset, entityPos.GetY() - scpriteHalfSizeOffset);
+
 
 	// Check each obstacle to see if there’s an intersection
 	for (auto obstacle : map.checkObects) 
@@ -140,29 +141,29 @@ std::vector <CVector> PathFinder::PathSmoothing(std::vector <CVector> currentWay
 		}
 	}
 
-	if (!hasObstacle)
+
+	//if (!hasObstacle || Dot(entity->GetVelocity(), currentWaypoints[0] - entity->GetPos()) < 0)
+	if (!hasObstacle || Distance(entity->GetPos(), currentWaypoints[0]) <= 25)
 		currentWaypoints.erase(currentWaypoints.begin());
 
 	return currentWaypoints;
 }
 
-
-bool PathFinder::canSeeNextNode(CVector initVector, vector<CVector>* currentWaypoints, int deleteStartIndex)
+ 
+void PathFinder::canSeeNextNode(CVector initVector, vector<CVector>* currentWaypoints, int deleteStartIndex)
 {
-	cout << deleteStartIndex << endl;
 	bool hasObstacle = false;
-
+	float scpriteHalfSizeOffset = 30;
 	// Initialize the bounding box for the player sprite
-	CVector LeftTop = CVector(initVector.GetX() - 30, initVector.GetY() + 30);
-	CVector LeftBottom = CVector(initVector.GetX() - 30, initVector.GetY() - 30);
-	CVector RightTop = CVector(initVector.GetX() + 30, initVector.GetY() + 30);
-	CVector RightBottom = CVector(initVector.GetX() + 30, initVector.GetY() - 30);
+	CVector LeftTop = CVector(initVector.GetX() - scpriteHalfSizeOffset, initVector.GetY() + scpriteHalfSizeOffset);
+	CVector LeftBottom = CVector(initVector.GetX() - scpriteHalfSizeOffset, initVector.GetY() - scpriteHalfSizeOffset);
+	CVector RightTop = CVector(initVector.GetX() + scpriteHalfSizeOffset, initVector.GetY() + scpriteHalfSizeOffset);
+	CVector RightBottom = CVector(initVector.GetX() + scpriteHalfSizeOffset, initVector.GetY() - scpriteHalfSizeOffset);
+
 
 	// Iterate through the waypoints in reverse order
 	for (int i = currentWaypoints->size() - 1; i > 1; i--)
 	{
-		cout << i << endl;
-		// Check each obstacle for intersections
 		for (auto obstacle : map.checkObects)
 		{
 	
@@ -184,34 +185,25 @@ bool PathFinder::canSeeNextNode(CVector initVector, vector<CVector>* currentWayp
 				Intersection::FindIntersection(RightBottom, (*currentWaypoints)[i], obstacleCorners[1], obstacleCorners[2])
 				)
 			{
-				cout << "DELETE";
 				hasObstacle = true;
 				break;
 			}
 		}
-
+	
 		// If no obstacle is found, delete the waypoints between index 1 and i
 		if (!hasObstacle)
 		{
-			cout << "del-" << deleteStartIndex + 1 << "deltw" << +i  << endl;
-			currentWaypoints->erase(currentWaypoints->begin() + deleteStartIndex + 1   , currentWaypoints->begin() + i   );
+			currentWaypoints->erase(currentWaypoints->begin() + deleteStartIndex + 1, currentWaypoints->begin() + i );
 			break;
-			return true; 
-
-		}
+		}	
 	}
-
-	return false;
 }
 
-vector<CVector> PathFinder::PathSmoothingUpdate(vector<CVector> currentWaypoints)
+vector<CVector> PathFinder::NodeCleaner(vector<CVector> currentWaypoints)
 {
-	int i = 0;
-	while (i < currentWaypoints.size() - 2)
-	{
-		bool isSomethingDeleted = canSeeNextNode(currentWaypoints[i], &currentWaypoints, i );
-		i += !isSomethingDeleted; // Increment i if nothing was deleted
-	}
+
+	for (int i= 0; i < currentWaypoints.size() - 2; i++)
+		canSeeNextNode(currentWaypoints[i], &currentWaypoints, i);
 	return currentWaypoints;
 }
 
@@ -346,22 +338,19 @@ std::vector <CVector> PathFinder::Move(Uint16 x, Uint16 y, CVector entityPos, bo
 			m_waypoints.push_back(m_graph[nodeI].pos);
 		m_waypoints.push_back(dest); //+ finall coordinate where mouse where clicked
 	}
-
-
 	m_waypoints.insert(m_waypoints.begin(), entityPos); // add start player pos, to calculate correct path smooth
 
+	
+	/*
 	for (auto point : m_waypoints)
-		cout << "X " << point.GetX() << " Y " << point.GetY() << endl ;
+		cout << "X " << point.GetX() << " Y " << point.GetY() << endl;
 	cout << endl << endl << endl;
+		*/
 
-	vector<CVector> smoothPath = PathSmoothingUpdate(m_waypoints);
-
+	vector<CVector> smoothPath = NodeCleaner(m_waypoints);
 	smoothPath.erase(smoothPath.begin()); //delete start player pos
 
-	
 
-	for (auto point : smoothPath)
-		cout << "X " << point.GetX() << " Y " << point.GetY() << endl;
 
 	return smoothPath;
 }

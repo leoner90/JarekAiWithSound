@@ -43,7 +43,7 @@ private:
 	int newState;
 	std::vector <CVector> currentWaypoint;
 	int lastState;
-	enum playerStates {IDLE, WALK};
+	enum playerStates {IDLE, WALK, ATTACK};
 
 
 	float currentHp, maxHp;
@@ -57,7 +57,7 @@ private:
 	//delta Time
 	float previousTime = 0.0f;
 	float deltaTime;
-
+	float attackAnimationTimer;
 	Map& map;
 
 	CVector saveLastPlayerVelocityVector;

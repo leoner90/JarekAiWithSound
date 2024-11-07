@@ -22,7 +22,7 @@ public:
 	void Attack(float time);
 	void GettingDamage(float DamageAmount);
 	void EnemyInterface();
-	void Animation();
+	void Animation(float time);
 	void callForAlert(float gameTime);
 	void DogAlert(float gameTime);
 	void AISwitchLightOn(float gameTime);
@@ -52,7 +52,7 @@ private:
 	vector<CVector> currentWaypoints;
 	vector<CVector> patrolVectorList;
 	float positionHoldTimer;
-	enum enemyStates { IDLE, PATROL, CHASE, ATTACK, RETURNTOPOS};
+	enum enemyStates { IDLE, PATROL, CHASE, ATTACK, WALK, RETURNTOPOS};
 	int lastState;
 	enum enemyType {CAT, DOG, HUMAN};
 	
@@ -67,6 +67,9 @@ private:
 	Map& map;
 
 	
+	CVector mainSpriteSize;
+
+
 	CSoundPlayer  lightOn;
 	CSoundPlayer attakSound;
 	CSoundPlayer deadSound;

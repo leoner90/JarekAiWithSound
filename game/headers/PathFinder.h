@@ -12,16 +12,17 @@ public:
 	bool PathFind( int nStart, int nGoal, vector<int>& path);
 	bool IsPlaceAllowed(CVector mousePos);
 
-	std::vector <CVector>  PathSmoothing(std::vector <CVector> currentWaypoints, CSprite& entity);
-	std::vector <CVector>  PathSmoothingUpdate(std::vector <CVector> currentWaypoints);
+	std::vector <CVector>  PathSmoothing(std::vector <CVector> currentWaypoints, CVector entityPos, CSprite* entity);
+	std::vector <CVector>  NodeCleaner(std::vector <CVector> currentWaypoints);
 
-	bool canSeeNextNode(CVector initVectorPos, std::vector <CVector> *currentWaypoints, int deleteStartIndex);
+	void canSeeNextNode(CVector initVectorPos, std::vector <CVector> *currentWaypoints, int deleteStartIndex);
 	std::vector <CVector> Move(Uint16 x, Uint16 y, CVector entityPos, bool mapOfscroll);
 
 	//AI
 	std::vector <CVector> GenerateAiPatrolPoints(CVector currentAiPos);
 
 	CSpriteList testNodes;//to delete just for testing
+	bool EnableNodesVisual;
 private:
 	vector<NODE> m_graph;
 	std::vector <CVector> m_waypoints;
@@ -43,5 +44,6 @@ struct NODE
 	float costSoFar;
 	int nConnection;
 	bool open;
+
 };
  

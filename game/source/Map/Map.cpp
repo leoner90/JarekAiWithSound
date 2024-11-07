@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Map/Map.h"
 
+//for testing, enable visual FOR obstacles on the mapp
+bool turnOnObstacleVisual = false;
 struct ObjCoord
 {
 	float x_min;
@@ -123,7 +125,8 @@ void Map::Draw(CGraphics* g, CVector playerPos)
 		gameBg.Draw(g);
 	else
 		gameBgNoLight.Draw(g);
-	//for (auto obj : checkObects) obj->Draw(g);
+	if(turnOnObstacleVisual)
+		for (auto obj : checkObects) obj->Draw(g);
 	
 }
  
