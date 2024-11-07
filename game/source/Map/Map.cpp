@@ -3,31 +3,11 @@
 
 //for testing, enable visual FOR obstacles on the mapp
 bool turnOnObstacleVisual = false;
-struct ObjCoord
-{
-	float x_min;
-	float x_max;
-	float y_min;
-	float y_max;
-	CVector pivotPoint;
-	float w;
-	float h;
-	ObjCoord(float x1, float x2, float y1, float y2)
-	{
-		x_min = x1;
-		x_max = x2;
-		y_min = y1;
-		y_max = y2;
-		
-		pivotPoint = CVector(x1 + (x2 - x1) / 2, y1 + (y2 - y1) / 2);
-		w = x2 - x1;
-		h = y2 - y1;
-	}
-};
 
-
+/*********** CONSTRUCTOR ***********/
 Map::Map()
 {
+	//SPRITES
 	globalLight = true;
 	gameBg.LoadImage("mainMapbg.jpg");
 	gameBg.SetImage("mainMapbg.jpg");
@@ -39,9 +19,7 @@ Map::Map()
 	gameBgNoLight.SetSize(2000, 2000);
 	gameBgNoLight.SetPosition(1000, 1000);
 
-	
- 
-
+	//CREATES ALL OBSTACLES ON THE MAP
 	ObjCoord allObj[] =
 	{
 		ObjCoord(230,330,85,225),//toilet
@@ -66,32 +44,27 @@ Map::Map()
 		ObjCoord(0,2000,0,50), //bottom
 	};
 
-	for (ObjCoord x : allObj)
+	//For Testing Only, creates physical sprite to represent obstacles
+	for (ObjCoord obj : allObj)
 	{
 		CSprite* newObj = new CSprite();
 		newObj->LoadImage("testobstacles.jpg");
 		newObj->SetImage("testobstacles.jpg");
-		newObj->SetSize(x.w, x.h);
-		newObj->SetPosition(x.pivotPoint);
+		newObj->SetSize(obj.w, obj.h);
+		newObj->SetPosition(obj.pivotPoint);
 		checkObects.push_back(newObj);
 	}
- 
 }
 
-
-Map::~Map()
-{
-}
-
+/*********** DRAW ***********/
 void Map::Draw(CGraphics* g, CVector playerPos)
 {
-	//map Scrolling
+	//MAP SCROLLING
 	if (playerPos.GetX() < leftScreenLimit)
 	{
 		scrollOffset = 0;
 		g->SetScrollPos(0, 130);
 	}
-
 	else if (playerPos.GetX() >= leftScreenLimit && playerPos.GetX() <= rightScreenLimit)
 	{
 		scrollOffset = leftScreenLimit - playerPos.GetX();
@@ -102,7 +75,6 @@ void Map::Draw(CGraphics* g, CVector playerPos)
 		scrollOffset = leftScreenLimit - rightScreenLimit;
 		g->SetScrollPos(leftScreenLimit - rightScreenLimit, 130);
 	}
-
 	if (playerPos.GetY() < bottomScrollLimit)
 	{
 		scrollOffset = 0;
@@ -120,16 +92,34 @@ void Map::Draw(CGraphics* g, CVector playerPos)
 		g->SetScrollPos(g->GetScrollPos().X(), bottomScrollLimit - topScrollLimit + 130);
 	}
 
+	//Save Current Map offset, for future use.
 	currentScrollOffset = g->GetScrollPos();
-	if(globalLight)
-		gameBg.Draw(g);
-	else
-		gameBgNoLight.Draw(g);
+
+	//DRAW MAP ITSELF - DEPENDS ON LIGHT CONDITION
+	globalLight ? gameBg.Draw(g) : gameBgNoLight.Draw(g);
+
+	//For Testing only, draw obstacles
 	if(turnOnObstacleVisual)
 		for (auto obj : checkObects) obj->Draw(g);
-	
 }
- 
 
+/*********** GETTERS ***********/
+bool Map::GetGlobalLightOn()
+{
+	return globalLight;
+}
 
+CSpriteList Map::GetAllObstacles()
+{
+	return checkObects;
+}
 
+void Map::SetGlobalLight(bool state)
+{
+	globalLight = state;
+}
+
+CVector Map::GetCurrentScrollOffset()
+{
+	return currentScrollOffset;
+}

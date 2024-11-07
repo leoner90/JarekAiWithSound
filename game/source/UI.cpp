@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "UI.h"
 
+/*********** CONSTRUCTOR ***********/
 UI::UI()
 {
 	actionBarSprite.LoadImage("actionBar.png");
@@ -8,25 +9,21 @@ UI::UI()
 	actionBarSprite.SetSize(1366, 170);
 	actionBarSprite.SetPosition(683, 85);
 
-
-	//hpBar 130/65 origin
+	//hpBar 
 	hpBarSprite.LoadImage("hpBar.png");
 	hpBarSprite.SetImage("hpBar.png");
-
 
 	//mpBar
 	mpBarSprite.LoadImage("mpBar.png");
 	mpBarSprite.SetImage("mpBar.png");
 
-
-	//under  Layer
+	//under Layer
 	underLayerSprite.LoadImage("underLayer.png");
 	underLayerSprite.SetImage("underLayer.png");
 	underLayerSprite.SetSize(1366, 120);
 	underLayerSprite.SetPosition(683, 60);
 
 	//bufs
-
 	hideBuffIcon.LoadImage("hiddenBuff.png");
 	hideBuffIcon.SetImage("hiddenBuff.png");
 	hideBuffIcon.SetSize(45, 45);
@@ -39,16 +36,11 @@ UI::UI()
 
 	cheeseObtainedIcon.LoadImage("Cheese.png");
 	cheeseObtainedIcon.SetImage("Cheese.png");
-
 	cheeseObtainedIcon.SetSize(30, 25);
 	cheeseObtainedIcon.SetPosition(1131, 98);
 }
 
-
-UI::~UI()
-{
-}
-
+/*********** UPDATE HP ***********/
 void UI::SetHpBar(float remainingHpPerc)
 {
 	float currentSize = 80.f * remainingHpPerc;
@@ -56,6 +48,7 @@ void UI::SetHpBar(float remainingHpPerc)
 	hpBarSprite.SetPos(110, currentSize / 2);
 }
 
+/*********** UPDATE MP ***********/
 void UI::SetMpBar(float remainingMpPerc)
 {
 	float currentSize = 80.f * remainingMpPerc;
@@ -63,6 +56,7 @@ void UI::SetMpBar(float remainingMpPerc)
 	mpBarSprite.SetPos(1260, currentSize / 2);
 }
 
+/*********** DRAW ***********/
 void UI::DrawUI(CGraphics* g, std::vector<bool> buffs, std::vector<float> buffRemainingTime)
 {
 	underLayerSprite.Draw(g);
@@ -70,22 +64,21 @@ void UI::DrawUI(CGraphics* g, std::vector<bool> buffs, std::vector<float> buffRe
 	mpBarSprite.Draw(g);
 	actionBarSprite.Draw(g);
 
-
 	//buffs
-	
 	if (buffs[0])
 	{
 		float buffTime = -buffRemainingTime[0] > 0 ? -buffRemainingTime[0] : 0;// in case if light is off
-
 		hideBuffIcon.Draw(g);
 		if(buffTime) 
 			*g << font("AFontPTSerif.ttf", 12) << color(CColor::White()) << xy(105, 85) << buffTime;
 	}
+
 	if (buffs[1])
 	{
 		speedbuffIcon.Draw(g);
 		*g << font("AFontPTSerif.ttf", 12) << color(CColor::White()) << xy(160, 85) << -buffRemainingTime[1];
 	}
 
-	if (buffs[2]) cheeseObtainedIcon.Draw(g);
+	if (buffs[2]) 
+		cheeseObtainedIcon.Draw(g);
 }

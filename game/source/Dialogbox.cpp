@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "DialogBox.h"
 
+/*********** CONSTRUCTOR ***********/
 Dialogbox::Dialogbox()
 {
 	dialogBoxTimer = 0;
@@ -9,21 +10,16 @@ Dialogbox::Dialogbox()
 	dialogboxSprite.SetImage("dialogboxSprite.png");
 	dialogboxSprite.SetSize(140, 50);
 	textHolder = "";
-
-	//dialogboxSprite.SetPosition(512, 80);
-	
 }
 
-Dialogbox::~Dialogbox()
-{
-}
-
+/*********** UPDATE ***********/
 void Dialogbox::Update(float gametime)
 {
 	if (isDialogBoxOpen && dialogBoxTimer < gametime)
 		isDialogBoxOpen = false;
 }
 
+/*********** DRAW ***********/
 void Dialogbox::Draw(CGraphics* g, CVector entityPos)
 {
 	if (isDialogBoxOpen)
@@ -34,11 +30,10 @@ void Dialogbox::Draw(CGraphics* g, CVector entityPos)
 	}
 }
 
+/*********** SHOW ***********/
 void Dialogbox::ShowDialogBox(string text, float gametime)
 {
- 
 		isDialogBoxOpen = true;
 		textHolder = text;
 		dialogBoxTimer = gametime + 1500;
- 
 }

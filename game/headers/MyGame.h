@@ -3,18 +3,53 @@
 #include "Player.h"
 #include "Enemy.h"
 
-
 class CMyGame : public CGame
 {
+private:
+	//Functions
+	void EnemyCreator();
+	void menuHandler(CGraphics* g);
+
+	// main Objects
 	Map mainMap;
 	Player player;
 	vector<Enemy*> AllEnemies;
 
+	//Prefabs  
+	CSprite* catSpritePrefab;
+	CSprite* cat2SpritePrefab;
+	CSprite* dogSpritePrefab;
+	CSprite* humanSpritePrefab;
+
+
+	CSprite startScreen;
+	CSprite mainMenuSelectionLogo;
+	//game Over
+	CSprite gameOverBg;
+	CSprite gameWinBg;
+
+	//Game Conditions
+	float deadScreenTimer;
+	bool gameStarted;
+	bool IsGameWon;
+	bool gameOver;
+
+	//MENU Handler
+	int currentMenuState;
+	int startScreenSelection;
+	bool showControllImg;
+	enum gameStates { MENU, PAUSE, INGAME };
+	enum menuScreenSelection { CONTINUE, NEWGAME, CONTROLS, EXIT, BACK };
+
+
+	//sounds
+	bool isMainMusicPlayong; // native Functions dosrn't work at all
+	CSoundPlayer  mainBgMusic;
+	CSoundPlayer  loseSound;
+	CSoundPlayer  winSound;
+
 public:
 	CMyGame(void);
-	//~CMyGame(void);
-
-	void EnemyCreator();
 
 	// Per-Frame Callback Funtions (must be implemented!)
 	virtual void OnUpdate();
@@ -30,40 +65,4 @@ public:
 
 	// Mouse Events Handlers
 	virtual void OnRButtonDown(Uint16 x,Uint16 y);
- 
-	void menuHandler(CGraphics* g);
-	void initSpritesHandler();
-
-	//prefabs  
-	CSprite* catSpritePrefab;
-	CSprite* cat2SpritePrefab;
-	CSprite* dogSpritePrefab;
-	CSprite* humanSpritePrefab;
-
-
-	CSprite startScreen;
-	CSprite mainMenuSelectionLogo;
-	//game Over
-	CSprite gameOverBg;
-	CSprite gameWinBg;
-	bool gameOver;
-	float deadScreenTimer;
-
-	bool gameStarted;
-	bool IsGameWon;
-	bool showControllImg;
-
-
-	int currentMenuState;
-	enum gameStates {MENU, PAUSE, INGAME};
-
-	int startScreenSelection;
-	enum menuScreenSelection { CONTINUE, NEWGAME, CONTROLS, EXIT, BACK };
-
-
-	//sounds
-	bool isMainMusicPlayong; // native Functions dosrn't work at all
-	CSoundPlayer  mainBgMusic;
-	CSoundPlayer  loseSound;
-	CSoundPlayer  winSound;
 };

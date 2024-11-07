@@ -33,7 +33,7 @@ bool DecisionMaker::SpotPlayer(CVector playerPos, CSprite& enemy, int enemyType)
     else
     {
         // Check for obstacles between the enemy and player
-        for (auto obstacle : map.checkObects)
+        for (auto obstacle : map.GetAllObstacles())
         {
             if (Intersection::FindIntersection(playerPos, enemy.GetPos(),
                 CVector(obstacle->GetLeft(), obstacle->GetTop()),

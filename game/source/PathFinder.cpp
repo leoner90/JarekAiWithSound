@@ -2,13 +2,10 @@
 #include "PathFinder.h"
 #include "Map/Map.h"
 
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!to see all the nodes on the map
-
-
-//CONSTRUCTOR 
+/*********** CONSTRUCTOR ***********/
 PathFinder::PathFinder(Map& m) : map(m)
 {
-	//for testing
+	//________-----for testing to see all the nodes on the map
 	EnableNodesVisual = false;
 
 	//NODES pivot points
@@ -73,7 +70,7 @@ PathFinder::PathFinder(Map& m) : map(m)
 		node2.conlist.push_back(CONNECTION{ ind1, dist });
 	}
 
-	///just For testing
+	///______----- Just for Testing. Create actual nodes sprite 
 	if(EnableNodesVisual)
 	for (auto x : Coords)
 	{
@@ -84,9 +81,9 @@ PathFinder::PathFinder(Map& m) : map(m)
 		newObj->SetPosition(CVector(x[0], x[1]));
 		testNodes.push_back(newObj);
 	}
-	
 }
 
+/*********** DESTRUCTOR ***********/
 PathFinder::~PathFinder()
 {
 	m_graph.clear();
@@ -100,12 +97,13 @@ PathFinder::~PathFinder()
 	testNodes.clear(); 
 }
 
-
+/*********** PATH SMOOTH ***********  (deletes first node if entity can see next one already) */
 std::vector <CVector> PathFinder::PathSmoothing(std::vector <CVector> currentWaypoints, CVector entityPos, CSprite* entity)
 {
 	if (currentWaypoints.size() <= 1) return currentWaypoints;
 	bool hasObstacle = false;
-	float scpriteHalfSizeOffset = 30;
+	float scpriteHalfSizeOffset = 30; // offset(should be half size of sprite + offset, but there is some bug..... so just offset)
+
 	// Initialize the bounding box for the player sprite
 	CVector LeftTop = CVector(entityPos.GetX() - scpriteHalfSizeOffset, entityPos.GetY() + scpriteHalfSizeOffset);
 	CVector LeftBottom = CVector(entityPos.GetX() - scpriteHalfSizeOffset, entityPos.GetY() - scpriteHalfSizeOffset);
@@ -114,9 +112,9 @@ std::vector <CVector> PathFinder::PathSmoothing(std::vector <CVector> currentWay
 
 
 	// Check each obstacle to see if there’s an intersection
-	for (auto obstacle : map.checkObects) 
+	for (auto obstacle : map.GetAllObstacles())
 	{
-		std::vector<CVector> obstacleCorners = 
+		std::vector<CVector> obstacleCorners =  
 		{
 			CVector(obstacle->GetLeft(), obstacle->GetTop()),    // Top-left
 			CVector(obstacle->GetLeft(), obstacle->GetBottom()), // Bottom-left
@@ -141,15 +139,16 @@ std::vector <CVector> PathFinder::PathSmoothing(std::vector <CVector> currentWay
 		}
 	}
 
-
-	//if (!hasObstacle || Dot(entity->GetVelocity(), currentWaypoints[0] - entity->GetPos()) < 0)
-	if (!hasObstacle || Distance(entity->GetPos(), currentWaypoints[0]) <= 25)
+	//if (!hasObstacle || Dot(entity->GetVelocity(), currentWaypoints[0] - entity->GetPos()) < 0) //dosen't work as expected
+	if (!hasObstacle || Distance(entity->GetPos(), currentWaypoints[0]) <= 10)
 		currentWaypoints.erase(currentWaypoints.begin());
 
 	return currentWaypoints;
 }
 
- 
+
+
+/*********** Node Checker for visability *********** checks and cleans vectors what PathFind() generated, to delete unnecessary vectors */
 void PathFinder::canSeeNextNode(CVector initVector, vector<CVector>* currentWaypoints, int deleteStartIndex)
 {
 	bool hasObstacle = false;
@@ -164,7 +163,7 @@ void PathFinder::canSeeNextNode(CVector initVector, vector<CVector>* currentWayp
 	// Iterate through the waypoints in reverse order
 	for (int i = currentWaypoints->size() - 1; i > 1; i--)
 	{
-		for (auto obstacle : map.checkObects)
+		for (auto obstacle : map.GetAllObstacles())
 		{
 	
 			vector<CVector> obstacleCorners =
@@ -198,16 +197,15 @@ void PathFinder::canSeeNextNode(CVector initVector, vector<CVector>* currentWayp
 		}	
 	}
 }
-
+/*********** Checks and cleans vectors what PathFind() generated, to delete unnecessary vectors ************/
 vector<CVector> PathFinder::NodeCleaner(vector<CVector> currentWaypoints)
 {
-
 	for (int i= 0; i < currentWaypoints.size() - 2; i++)
 		canSeeNextNode(currentWaypoints[i], &currentWaypoints, i);
 	return currentWaypoints;
 }
 
-
+/*********** INITIAL PATH FINDER ************/
 bool PathFinder::PathFind(int nStart, int nGoal, vector<int>& path)
 {
 	list<int> openNodes;
@@ -224,9 +222,7 @@ bool PathFinder::PathFind(int nStart, int nGoal, vector<int>& path)
 	//_____________
 	while (!openNodes.empty())
 	{
-		// lambda returns the smallest costSoFar in current open nodes;
-		//first loop lest say node[0] cost = 0;
-		//+ Heuristic prediction A* algo
+		// lambda returns the smallest costSoFar in current open nodes; A*?
 		int curNode = *min_element(openNodes.begin(), openNodes.end(),
 			[this, nGoal](int n1, int n2) {
 				float f1 = m_graph[n1].costSoFar + Distance(m_graph[n1].pos, m_graph[nGoal].pos);
@@ -234,14 +230,14 @@ bool PathFinder::PathFind(int nStart, int nGoal, vector<int>& path)
 				return f1 < f2;
 			});
 
-		// Found the goal node?
+		// Found the goal node
 		if (curNode == nGoal)
 			break;
 
 		//for each conn in node[0] end connection id 1 (as we have only 1 now)
 		for each (auto conn in m_graph[curNode].conlist)
 		{
-			//id1
+			//puts in - id
 			int endNode = conn.nEnd;
 			float newCostSoFar = m_graph[curNode].costSoFar + conn.cost;
 
@@ -286,8 +282,7 @@ bool PathFinder::PathFind(int nStart, int nGoal, vector<int>& path)
 //********* checks  Is Place Allowed
 bool PathFinder::IsPlaceAllowed(CVector mousePos)
 {
-	
-	for (auto obstacle : map.checkObects)
+	for (auto obstacle : map.GetAllObstacles())
 		if (obstacle->HitTest(mousePos))
 		{
 			return false;
@@ -297,13 +292,11 @@ bool PathFinder::IsPlaceAllowed(CVector mousePos)
 	return true;
 }
 
-
-//********* on mouse click action, returns CVectors array
-std::vector <CVector> PathFinder::Move(Uint16 x, Uint16 y, CVector entityPos, bool mapOfscroll)
+//********* PATH GENERATOR (on mouse click action, returns CVectors array of actual path) *********
+std::vector <CVector> PathFinder::PathGenerator(float x, float y, CVector entityPos, bool mapOfscroll)
 {
 	CVector dest(x, y);
-	if(mapOfscroll)  dest -= map.currentScrollOffset;  
-
+	if (mapOfscroll)  dest -= map.GetCurrentScrollOffset();
 
 	if (!IsPlaceAllowed(dest))
 	{
@@ -336,25 +329,22 @@ std::vector <CVector> PathFinder::Move(Uint16 x, Uint16 y, CVector entityPos, bo
 	{
 		for (int nodeI : path)
 			m_waypoints.push_back(m_graph[nodeI].pos);
-		m_waypoints.push_back(dest); //+ finall coordinate where mouse where clicked
+		//+ finall coordinate where mouse where clicked
+		m_waypoints.push_back(dest); 
 	}
+
+	//add player pos on front
 	m_waypoints.insert(m_waypoints.begin(), entityPos); // add start player pos, to calculate correct path smooth
 
-	
-	/*
-	for (auto point : m_waypoints)
-		cout << "X " << point.GetX() << " Y " << point.GetY() << endl;
-	cout << endl << endl << endl;
-		*/
-
+	//Deletes all nodes which are not optimal
 	vector<CVector> smoothPath = NodeCleaner(m_waypoints);
 	smoothPath.erase(smoothPath.begin()); //delete start player pos
 
-
-
+	//return ready to use Path
 	return smoothPath;
 }
 
+/********** AI PATROL POINTS GENERATOR ***********/
 std::vector<CVector> PathFinder::GenerateAiPatrolPoints(CVector currentAiPos)
 {
 	int depthOfPatrolPoints = 3;
@@ -364,7 +354,6 @@ std::vector<CVector> PathFinder::GenerateAiPatrolPoints(CVector currentAiPos)
 		min_element(m_graph.begin(), m_graph.end(), [this, currentAiPos](NODE& n1, NODE& n2) -> bool {
 		return Distance(n1.pos, currentAiPos) < Distance(n2.pos, currentAiPos);
 			});
-
 
 	int nFirst = iFirst - m_graph.begin();
 	patrolPoints.push_back(m_graph[nFirst].pos);
@@ -383,8 +372,11 @@ std::vector<CVector> PathFinder::GenerateAiPatrolPoints(CVector currentAiPos)
 		patrolPoints.push_back(prevCon);
 	}
 
-
-
-
 	return patrolPoints;
+}
+
+//GETTERS
+CSpriteList PathFinder::GetTestNodes()
+{
+	return testNodes;
 }

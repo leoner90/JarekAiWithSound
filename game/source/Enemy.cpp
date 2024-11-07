@@ -58,8 +58,8 @@ void Enemy::Update(float time)
 	Animation(time);
 	enemySprite->Update(time);
 
-	bool canSee = DecisionMaker::SpotPlayer(player.playerSprite->GetPos(), *enemySprite, enemyType);
-	if (player.isPlayerHidden) canSee = false;
+	bool canSee = DecisionMaker::SpotPlayer(player.getPlayerSprite()->GetPos(), *enemySprite, enemyType);
+	if (player.IsPlayerVisible()) canSee = false;
 
 	//DOG CALL TO LAST PLAYER POS
 	if (isdogAllerted && enemyType == DOG)
@@ -72,7 +72,7 @@ void Enemy::Update(float time)
 	}
 
 	//HUMAN CALL TO SWITCH LIGHT POSITION
-	if ((!map.globalLight && enemyType == HUMAN))
+	if ((!map.GetGlobalLightOn() && enemyType == HUMAN))
 		AISwitchLightOn(time);
 		
 	//CAT CALL FOR HELP IF LOW HP
@@ -89,8 +89,8 @@ void Enemy::Update(float time)
 	}
 
 	//basicly rotate cat to player if it's allready seen , to fix a bag that during attack player can just run behind the cat and cat starts patroling
-	if (Distance(enemySprite->GetPos(), player.playerSprite->GetPos()) < 100 && !player.isPlayerHidden)
-		enemySprite->SetDirection(player.playerSprite->GetPos() - enemySprite->GetPos());
+	if (Distance(enemySprite->GetPos(), player.getPlayerSprite()->GetPos()) < 100 && !player.IsPlayerVisible())
+		enemySprite->SetDirection(player.getPlayerSprite()->GetPos() - enemySprite->GetPos());
 
 
 	Attack(time);//ATTACK
@@ -104,9 +104,9 @@ void Enemy::Update(float time)
 
 void Enemy::Chassing(float gametime)
 {
-	bool canSee = DecisionMaker::SpotPlayer(player.playerSprite->GetPos(), *enemySprite, enemyType);
+	bool canSee = DecisionMaker::SpotPlayer(player.getPlayerSprite()->GetPos(), *enemySprite, enemyType);
  
-	if (player.isPlayerHidden) 
+	if (player.IsPlayerVisible())
 		canSee = false;
  
 	if (!currentWaypoints.empty() && enemySprite->GetStatus() == CHASE)
@@ -118,7 +118,7 @@ void Enemy::Chassing(float gametime)
 			enemySprite->SetDirection(destinationToFisrtWP);
 			enemySprite->SetRotation(enemySprite->GetDirection());
 			enemySprite->SetSpeed(enemySpeed * 2);
-			if(Distance(enemySprite->GetPos(), player.playerSprite->GetPos()) > 100)
+			if(Distance(enemySprite->GetPos(), player.getPlayerSprite()->GetPos()) > 100)
 				ShowDialogBox("I CAN SEE YOU!", gametime);
 		}
 	 
@@ -132,29 +132,29 @@ void Enemy::Chassing(float gametime)
 		}
 	}
 
-	float distance = Distance(enemySprite->GetPos(), player.playerSprite->GetPos());
+	float distance = Distance(enemySprite->GetPos(), player.getPlayerSprite()->GetPos());
 	if (canSee && distance < 300 && distance > 70)
 	{
 		enemySprite->SetStatus(CHASE);
 		currentWaypoints.clear();
-		currentWaypoints.push_back(player.playerSprite->GetPos());
+		currentWaypoints.push_back(player.getPlayerSprite()->GetPos());
 		playerChasingLastSpot = true;
 	}
 
 
 	else if (!isEnemyStaticPos && enemySprite->GetStatus() == CHASE && !playerChasingLastSpot)
 	{
-		if (Distance(enemySprite->GetPos(), player.playerSprite->GetPos()) > 100)
+		if (Distance(enemySprite->GetPos(), player.getPlayerSprite()->GetPos()) > 100)
 			ShowDialogBox("WHERE IS HE?!", gametime);
 		isPatroling = false; // to reset patroling waypoints and start from new pos
 		enemySprite->SetStatus(PATROL);
 		positionHoldTimer = 0;
 	}
-	else if (isEnemyStaticPos && enemySprite->GetStatus() == CHASE && player.isPlayerHidden)
+	else if (isEnemyStaticPos && enemySprite->GetStatus() == CHASE && player.IsPlayerVisible())
 	{
 		currentWaypoints.clear();
 		enemySprite->SetVelocity(0, 0);
-		currentWaypoints = PathFinder::Move(saveStaticPos.GetX(), saveStaticPos.GetY(), enemySprite->GetPos(), false);
+		currentWaypoints = PathFinder::PathGenerator(saveStaticPos.GetX(), saveStaticPos.GetY(), enemySprite->GetPos(), false);
 		enemySprite->SetStatus(RETURNTOPOS);
 	}
 	
@@ -162,12 +162,12 @@ void Enemy::Chassing(float gametime)
 
 void Enemy::Attack(float time)
 {
-	bool canSee = DecisionMaker::SpotPlayer(player.playerSprite->GetPos(), *enemySprite, enemyType);
+	bool canSee = DecisionMaker::SpotPlayer(player.getPlayerSprite()->GetPos(), *enemySprite, enemyType);
 
 
 
-	if (player.isPlayerHidden) canSee = false;
-	float distance = Distance(enemySprite->GetPos(), player.playerSprite->GetPos());
+	if (player.IsPlayerVisible()) canSee = false;
+	float distance = Distance(enemySprite->GetPos(), player.getPlayerSprite()->GetPos());
 
 
 	//attack if close
@@ -180,16 +180,16 @@ void Enemy::Attack(float time)
 	}
 
 
-	if (enemySprite->GetStatus() == ATTACK && ((Distance(enemySprite->GetPos(), player.playerSprite->GetPos()) > 70 || player.isPlayerHidden)))
+	if (enemySprite->GetStatus() == ATTACK && ((Distance(enemySprite->GetPos(), player.getPlayerSprite()->GetPos()) > 70 || player.IsPlayerVisible())))
 	{
 		currentWaypoints.clear();
 	
 		enemySprite->SetStatus(CHASE);
-		currentWaypoints.push_back(player.playerSprite->GetPos());
+		currentWaypoints.push_back(player.getPlayerSprite()->GetPos());
 	}
 
 
-	if (enemySprite->GetStatus() == ATTACK && attackDellayTimer < time && !player.isPlayerHidden)
+	if (enemySprite->GetStatus() == ATTACK && attackDellayTimer < time && !player.IsPlayerVisible())
 	{
 
 		attackDellayTimer = time + 1500;
@@ -213,7 +213,7 @@ void Enemy::GettingDamage(float DamageAmount)
 
 void Enemy::Patroling(float time)
 {
-	if (enemySprite->GetStatus() == PATROL || (enemySprite->GetStatus() == IDLE && enemyType != DOG))
+	if (enemySprite->GetStatus() == PATROL || (enemySprite->GetStatus() == IDLE && enemyType != DOG && enemyType != HUMAN))
 	{
 		if (!isEnemyStaticPos && !isPatroling)
 		{
@@ -340,7 +340,7 @@ void Enemy::callForAlert(float gameTime)
 		currentWaypoints.clear();
 		enemySprite->SetVelocity(0, 0);
 		saveCurrentPos = enemySprite->GetPos();
-		currentWaypoints = PathFinder::Move(1200, 1200, enemySprite->GetPos(), false);
+		currentWaypoints = PathFinder::PathGenerator(1200, 1200, enemySprite->GetPos(), false);
 		isInCallForHelp = true;
 	}
  
@@ -372,7 +372,7 @@ void Enemy::callForAlert(float gameTime)
 				if (!isdogAllerted)
 				{
 					isdogAllerted = true;
-					currentWaypoints = PathFinder::Move(saveCurrentPos.GetX(), saveCurrentPos.GetY(), enemySprite->GetPos(), false);
+					currentWaypoints = PathFinder::PathGenerator(saveCurrentPos.GetX(), saveCurrentPos.GetY(), enemySprite->GetPos(), false);
 				}
 				
 				oneTimeAlert = true;
@@ -391,7 +391,7 @@ void Enemy::DogAlert(float gameTime)
 		enemySprite->SetVelocity(0, 0);
 		currentWaypoints.clear();
 		enemySprite->SetStatus(WALK);
-		currentWaypoints = PathFinder::Move(saveCurrentPos.GetX(), saveCurrentPos.GetY(), enemySprite->GetPos(), false);
+		currentWaypoints = PathFinder::PathGenerator(saveCurrentPos.GetX(), saveCurrentPos.GetY(), enemySprite->GetPos(), false);
 		dogAlarma = true;
 	}
 
@@ -405,7 +405,7 @@ void Enemy::DogAlert(float gameTime)
 			positionHoldTimer = 2000 + gameTime;
 			ShowDialogBox("STUPID CAT!", gameTime);
 			currentWaypoints.clear();
-			currentWaypoints = PathFinder::Move(1200, 1200, enemySprite->GetPos(), false);
+			currentWaypoints = PathFinder::PathGenerator(1200, 1200, enemySprite->GetPos(), false);
 
 			isdogAllerted = false;
 			enemySprite->SetStatus(RETURNTOPOS);
@@ -421,7 +421,7 @@ void Enemy::AISwitchLightOn(float gameTime)
 	if (!humanAlarma)
 	{
 		currentWaypoints.clear();
-		currentWaypoints = PathFinder::Move(1850, 120, enemySprite->GetPos(), false);
+		currentWaypoints = PathFinder::PathGenerator(1850, 120, enemySprite->GetPos(), false);
 		humanAlarma = true;
 		enemySprite->SetStatus(WALK);
 	}
@@ -434,11 +434,11 @@ void Enemy::AISwitchLightOn(float gameTime)
 		{
 			
 			positionHoldTimer = 2000 + gameTime;
-			map.globalLight = true;
+			map.SetGlobalLight(true);
 			lightOn.Play("lightOn.wav", 0);
 			humanAlarma = false;
 			currentWaypoints.clear();
-			currentWaypoints = PathFinder::Move(1720, 1410, enemySprite->GetPos(), false);
+			currentWaypoints = PathFinder::PathGenerator(1720, 1410, enemySprite->GetPos(), false);
 			enemySprite->SetStatus(RETURNTOPOS);
 			enemySprite->SetAnimation("Idle", 8);
 			enemySprite->SetVelocity(0, 0);

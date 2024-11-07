@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "MyGame.h"
 
+/*********** CONSTRUCTOR ***********/
 CMyGame::CMyGame(void) : mainMap(), player(mainMap)
 {
 	//PREFABS
@@ -23,41 +24,73 @@ CMyGame::CMyGame(void) : mainMap(), player(mainMap)
 	humanSpritePrefab->AddImage("human.png", "Idle", 2, 4, 0, 3, 0, 3, CColor::White());
 	humanSpritePrefab->AddImage("human.png", "Walk", 2, 4, 0, 3, 0, 1, CColor::White());
 	humanSpritePrefab->AddImage("human.png", "Attack", 2, 4, 0, 2, 1, 2, CColor::White());
+
+	//Menu BG
+	startScreen.LoadImage("menuBar.jpg");
+	startScreen.SetImage("menuBar.jpg");
+	startScreen.SetSize(1366, 768);
+	startScreen.SetPosition(1366 / 2, 768 / 2);
+
+	//GameOver BG
+	gameOverBg.LoadImage("gameOverBg.jpg");
+	gameOverBg.SetImage("gameOverBg.jpg");
+	gameOverBg.SetSize(1366, 768);
+	gameOverBg.SetPosition(1366 / 2, 768 / 2);
+
+	//gameWinBg BG
+	gameWinBg.LoadImage("gameWinBg.jpg");
+	gameWinBg.SetImage("gameWinBg.jpg");
+	gameWinBg.SetSize(1366, 768);
+	gameWinBg.SetPosition(1366 / 2, 768 / 2);
+
+	//Main Menu Scroling Logo
+	mainMenuSelectionLogo.LoadImage("Cheese.png");
+	mainMenuSelectionLogo.SetImage("Cheese.png");
+	mainMenuSelectionLogo.SetSize(60, 50);
 }
 
 /*********** UPDATE ***********/
 void CMyGame::OnUpdate()
 {
-	if (IsMenuMode() || IsPaused() || gameOver) return;
+	if (IsMenuMode() || IsPaused() || gameOver) 
+		return;
 	Uint32 t = GetTime();
+	
+	//Update And delete Enemies
 	for (auto AIplayer : AllEnemies) 
 	{
 		AIplayer->Update(t);
 		if (AIplayer->IsDead) 
 			AllEnemies.erase(find(AllEnemies.begin(), AllEnemies.end(), AIplayer));
 	}
+
+	//update Player and Game Status
 	player.Update(t, AllEnemies);
 
-	if (player.IsDead || player.isGameWon)
+	if (player.IsPlayerDead() || player.IsGameWon())
 		OnGameOver();
 }
 
 /***********  DRAW ***********/
 void CMyGame::OnDraw(CGraphics* g)
 {
+	//if game over draw win or game over screen for 2 sec
 	if (deadScreenTimer != 0 && deadScreenTimer > GetTime())
 	{
-		if(player.isGameWon)
+		if(player.IsGameWon())
 			gameWinBg.Draw(g);
 		else
 			gameOverBg.Draw(g);
 	}
+	//if menu mode show menu
 	else if (IsMenuMode() || IsPaused())
 		menuHandler(g);
 	else 
 	{
-		mainMap.Draw(g, player.playerSprite->GetPosition());
-		for (auto AIplayer : AllEnemies)   AIplayer->Draw(g);
+		//if In Game Draw (map, enemies, p[layer)
+		mainMap.Draw(g, player.getPlayerSprite()->GetPosition());
+		for (auto AIplayer : AllEnemies)
+			AIplayer->Draw(g);
 		player.Draw(g, GetTime());
 	}
 }
@@ -65,13 +98,11 @@ void CMyGame::OnDraw(CGraphics* g)
 /***********  INIT ***********/
 void CMyGame::OnInitialize()
 {
-	initSpritesHandler();
 	PauseGame(false);
 	ChangeMode(MODE_MENU);  
 	gameStarted = IsGameWon = false;
 	currentMenuState = MENU;
 	startScreenSelection = NEWGAME;
-	mainMap.globalLight = true;
 	mainBgMusic.Play("mainBgMusic.wav", -1);
 	isMainMusicPlayong = true;
 }
@@ -80,7 +111,7 @@ void CMyGame::OnInitialize()
 void CMyGame::OnStartGame()
 {
 	deadScreenTimer = 0;
-	mainMap.globalLight = true;
+	mainMap.SetGlobalLight(true);
 	player.gameInit();
 	EnemyCreator();
 	gameOver = false;
@@ -91,7 +122,7 @@ void CMyGame::OnGameOver()
 {
 	mainBgMusic.Stop();
 	isMainMusicPlayong = false;
-	if (player.IsDead)
+	if (player.IsPlayerDead())
 		loseSound.Play("gameOver.wav", 0);
 	else
 		winSound.Play("win.wav", 0);;
@@ -121,34 +152,6 @@ void CMyGame::EnemyCreator()
 	AllEnemies.push_back(cat2);
 	AllEnemies.push_back(dog);
 	AllEnemies.push_back(human);
-}
-
-/***********  initSpritesHandler ***********/
-void CMyGame::initSpritesHandler()
-{
-	//Menu BG
-	startScreen.LoadImage("menuBar.jpg");
-	startScreen.SetImage("menuBar.jpg");
-	startScreen.SetSize(1366, 768);
-	startScreen.SetPosition(1366 / 2, 768 / 2);
-
-	//GameOver BG
-	gameOverBg.LoadImage("gameOverBg.jpg");
-	gameOverBg.SetImage("gameOverBg.jpg");
-	gameOverBg.SetSize(1366, 768);
-	gameOverBg.SetPosition(1366 / 2, 768 / 2);
-
-	//gameWinBg BG
-	gameWinBg.LoadImage("gameWinBg.jpg");
-	gameWinBg.SetImage("gameWinBg.jpg");
-	gameWinBg.SetSize(1366, 768);
-	gameWinBg.SetPosition(1366 / 2, 768 / 2);
-
-	//Main Menu Scroling Logo
-	mainMenuSelectionLogo.LoadImage("Cheese.png");
-	mainMenuSelectionLogo.SetImage("Cheese.png");
-	mainMenuSelectionLogo.SetSize(60, 50);;
-
 }
 
 /***********  menuHandler ***********/

@@ -3,8 +3,10 @@
 #include "Map/Map.h"
 #include "Enemy.h"
 
+/*********** CONSTRUCTOR ***********/
 Player::Player(Map& map) : PathFinder(map), map(map)
 {
+	//SPRITES
 	mainGoalCheese.LoadImage("Cheese.png");
 	mainGoalCheese.SetImage("Cheese.png");
 	mainGoalCheese.SetSize(50, 50);
@@ -24,10 +26,7 @@ Player::Player(Map& map) : PathFinder(map), map(map)
 	movementPos.SetColorKey(CColor::White());
 }
 
-Player::~Player()
-{
-}
-
+/*********** RESET ON GAME START ***********/
 void Player::gameInit()
 {
 	mainGoalCheese.SetPosition(1800, 1420);
@@ -61,6 +60,7 @@ void Player::gameInit()
 	showMovementPosTimer = 0;
 }
 
+/*********** UPDATE ***********/
 void Player::Update(float time, std::vector<Enemy*>& enemiesRef)
 {
 	if (IsDead) return;
@@ -89,6 +89,7 @@ void Player::Update(float time, std::vector<Enemy*>& enemiesRef)
 	buffReaminingTime = { time - hideBuffTimer, time - speedBuffTimer };
 }
 
+/*********** DRAW ***********/
 void Player::Draw(CGraphics* g, float time)
 {
 	if (IsDead) return;
@@ -120,10 +121,8 @@ void Player::Draw(CGraphics* g, float time)
 	playerSprite->Draw(g);
 
 
-	for (auto obj : testNodes) 
+	for (auto obj : PathFinder::GetTestNodes()) 
 		obj->Draw(g);
-
-
 
 
 	CVector SaveOfset = g->GetScrollPos();
@@ -137,6 +136,7 @@ void Player::Draw(CGraphics* g, float time)
 	g->SetScrollPos(SaveOfset);
 }
 
+/*********** MOVE TO ***********/
 void Player::MoveToWaypoint()
 {
 	if (!currentWaypoint.empty()) 
@@ -164,8 +164,6 @@ void Player::MoveToWaypoint()
 			currentWaypoint.clear();
 			playerSprite->SetVelocity(0, 0);
 		}
-
-	 
 	}
 
 	//baffs
@@ -176,22 +174,8 @@ void Player::MoveToWaypoint()
 }
 
 
-void Player::Animation()
-{
-	if (lastState == playerSprite->GetStatus())
-		return;
 
-	playerSprite->SetAnimation("Idle", 12);
-	if (playerSprite->GetStatus() == WALK) {
-		playerSprite->SetAnimation("Walk", 8);
-	}
-	else if (playerSprite->GetStatus() == ATTACK) {
-		playerSprite->SetAnimation("Attack", 16);
-	}
-	lastState = playerSprite->GetStatus();
-
-}
-
+/*********** ATTACK ENEMY ***********/
 void Player::Attack(float time)
 {
 	isAttacking = false;
@@ -201,11 +185,11 @@ void Player::Attack(float time)
 	playerSprite->SetVelocity(0, 0);
 
 	//attack electricalPanel
-	if (playerSprite->GetX() > 1840 && playerSprite->GetY() < 150 && map.globalLight)
+	if (playerSprite->GetX() > 1840 && playerSprite->GetY() < 150 && map.GetGlobalLightOn())
 	{
 		lightOff.Play("lightOff.wav", 0);
 		isPlayerHidden = true;
-		map.globalLight = false;
+		map.SetGlobalLight(false);
 	}
 		
 	//all enemies on front + distance less then 80 getting damage
@@ -229,6 +213,7 @@ void Player::Attack(float time)
 	}
 }
 
+/*********** GETTING DAMAGE ***********/
 void Player::GettingDamage(float DamageAmount)
 {
 	hurtSound.Play("hurtSound.wav", 0);
@@ -242,11 +227,53 @@ void Player::GettingDamage(float DamageAmount)
 		UI::SetHpBar(currentHp / maxHp);
 }
 
+/*********** BUFFS AND ENERGY RESETS ***********/
+void Player::buffResets(float time)
+{
+	// timers reset - extra condition to speed up check?
+	if (isPlayerHasted && speedBuffTimer < time)  isPlayerHasted = false;
+	if (isAttacking && attackDellayTimer < time)  isAttacking = false;
+	if (isPlayerHidden && hideBuffTimer < time && map.GetGlobalLightOn()) 
+		isPlayerHidden = false;
+}
+
+void Player::mpRegen(float time)
+{
+	if (previousTime == 0.0f)
+		previousTime = time;
+	else
+	{
+		deltaTime = (time - previousTime) / 1000.f;
+		previousTime = time;
+	}
+	if (currentMp < 100)
+	{
+		currentMp += 5 * deltaTime;
+		if (currentMp > 100) currentMp = 100;
+		UI::SetMpBar(currentMp / maxMp);
+	}
+}
+
+/*********** PLAYER ANIMATION ***********/
+void Player::Animation()
+{
+	if (lastState == playerSprite->GetStatus())
+		return;
+
+	playerSprite->SetAnimation("Idle", 12);
+
+	if (playerSprite->GetStatus() == WALK)
+		playerSprite->SetAnimation("Walk", 8);
+
+	else if (playerSprite->GetStatus() == ATTACK)
+		playerSprite->SetAnimation("Attack", 16);
+
+	lastState = playerSprite->GetStatus();
+}
+
+/*********** KEYBOARD ACTIONS ***********/
 void Player::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode, float time)
 {
-	;
-	;
-	;
 	if (sym == SDLK_q && currentMp >= 10 && !isAttacking && attackDellayTimer < time)
 	{
 		currentMp -= 10;
@@ -269,45 +296,39 @@ void Player::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode, float time)
 		speedBuffTimer = time + 2000;
 		isPlayerHasted = true;
 		speedSkill.Play("speedSkill.wav", 0);
-	}	
-}
-
-void Player::buffResets(float time)
-{
-	// timers reset - extra condition to speed up check?
-	if (isPlayerHasted && speedBuffTimer < time)  isPlayerHasted = false;
-	if (isAttacking && attackDellayTimer < time)  isAttacking = false;
-	if (isPlayerHidden && hideBuffTimer < time && map.globalLight )  isPlayerHidden = false;
-}
-
-void Player::mpRegen(float time)
-{
-	if (previousTime == 0.0f)
-		previousTime = time;
-	else
-	{
-		deltaTime = (time - previousTime) / 1000.f;
-		previousTime = time;
-	}
-	if (currentMp < 100)
-	{
-		currentMp += 5 * deltaTime;
-		if (currentMp > 100) currentMp = 100;
-		UI::SetMpBar(currentMp / maxMp);
 	}
 }
-
  
- 
+/*********** MOUSE ACTIONS ***********/
 void Player::OnRButtonDown(Uint16 x, Uint16 y, float gameTime)
 {
 	playerSprite->SetVelocity(0, 0);
 	playerSprite->SetStatus(IDLE);
-	currentWaypoint = PathFinder::Move(x,y, playerSprite->GetPos(),true);
+	currentWaypoint = PathFinder::PathGenerator(x,y, playerSprite->GetPos(),true);
 	if (!currentWaypoint.empty())
 	{
 		movementPos.SetPos(currentWaypoint.back());
 		showMovementPosTimer = gameTime + 500;
 	}
-		
+}
+
+/*********** GETTERS ***********/
+CSprite* Player::getPlayerSprite()
+{
+	return playerSprite;
+}
+
+bool Player::IsPlayerDead()
+{
+	return IsDead;
+}
+
+bool Player::IsGameWon()
+{
+	return isGameWon;
+}
+
+bool Player::IsPlayerVisible()
+{
+	return isPlayerHidden;
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "Intersection.h"
 
+//Forward Declaration
 class Map;
 class NODE;
 
@@ -9,25 +10,45 @@ class PathFinder : public Intersection
 public:
 	PathFinder(Map& m);
 	~PathFinder();
+	//Goes Through Graph to find best Rote
 	bool PathFind( int nStart, int nGoal, vector<int>& path);
-	bool IsPlaceAllowed(CVector mousePos);
 
+	//Every Frame checks is next node visible if so deletes first one
 	std::vector <CVector>  PathSmoothing(std::vector <CVector> currentWaypoints, CVector entityPos, CSprite* entity);
-	std::vector <CVector>  NodeCleaner(std::vector <CVector> currentWaypoints);
 
-	void canSeeNextNode(CVector initVectorPos, std::vector <CVector> *currentWaypoints, int deleteStartIndex);
-	std::vector <CVector> Move(Uint16 x, Uint16 y, CVector entityPos, bool mapOfscroll);
+	//Receives initial entity coordinates and destination coordinates, generates path and returns Vector of generated CVectors(Path)
+	std::vector <CVector> PathGenerator(float x, float y, CVector entityPos, bool mapOfscroll);
 
-	//AI
+	//Generates and returns
 	std::vector <CVector> GenerateAiPatrolPoints(CVector currentAiPos);
 
-	CSpriteList testNodes;//to delete just for testing
-	bool EnableNodesVisual;
+	//Getters fo testin only
+	CSpriteList GetTestNodes();
 private:
+	//Functions
+	//if click on obstacles return false
+	bool IsPlaceAllowed(CVector mousePos);
+
+	//checks and cleans vectors what PathFind() generated, to delete unnecessary vectors
+	std::vector <CVector>  NodeCleaner(std::vector <CVector> currentWaypoints);
+	void canSeeNextNode(CVector initVectorPos, std::vector <CVector>* currentWaypoints, int deleteStartIndex);
+
+	//All nodes holder
 	vector<NODE> m_graph;
+
+	//local Path holder
 	std::vector <CVector> m_waypoints;
+
+	//Map Pointer
 	Map& map;
+
+	//just for testing
+	bool EnableNodesVisual;
+	CSpriteList testNodes;
 };
+
+
+//___________ STRUCTS___________
 
 //CONNECTIONS
 struct CONNECTION
@@ -44,6 +65,5 @@ struct NODE
 	float costSoFar;
 	int nConnection;
 	bool open;
-
 };
  
