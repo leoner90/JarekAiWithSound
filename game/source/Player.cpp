@@ -17,7 +17,7 @@ Player::Player(Map& map) : PathFinder(map), map(map)
 	playerSprite->AddImage("player.png", "Walk", 31, 1, 16, 0, 23, 0);
 	playerSprite->AddImage("player.png", "Attack",  31, 1, 24, 0, 30, 0);
 	playerSprite->SetAnimation("Idle");
-	damage = 50;
+	damage = 40;
 
 	//mouse
 	movementPos.LoadImage("movementPos.png");
@@ -35,28 +35,31 @@ void Player::gameInit()
 	playerSprite->SetSpeed(0);
 	playerSprite->SetDirection(90);
 
-	//buss and stats reset
+	//condition resets
 	IsCheeseObtained = false;
 	IsDead = false;
-	currentHp = maxHp = 100;
-	currentMp = maxMp = 100;
-
-	playerSpeedOrigin = 100;
-	speedBuffTimer = 0;
-	isPlayerHasted = false;
-
-	isPlayerHidden = false;
-	hideBuffTimer = 0;
-	attackAnimationTimer = 0;
-
 	isGameWon = false;
 
+	//stats resets
+	currentHp = maxHp = 100;
+	currentMp = maxMp = 100;
+	playerSpeedOrigin = 100;
 	UI::SetHpBar(1);
 	UI::SetMpBar(1);
+
+	//buffs resets
+	speedBuffTimer = 0;
+	isPlayerHasted = false;
+	isPlayerHidden = false;
+	hideBuffTimer = 0;
+
+	//attack resets
+	attackAnimationTimer = 0;
 	attackDellayTimer = 0;
+
+	//reset movement conditons
 	if (!currentWaypoint.empty())
 		currentWaypoint.clear();
-
 	showMovementPosTimer = 0;
 }
 
@@ -64,17 +67,20 @@ void Player::gameInit()
 void Player::Update(float time, std::vector<Enemy*>& enemiesRef)
 {
 	if (IsDead) return;
-	AllEnemies = enemiesRef;
-	mpRegen(time);
-	if (isAttacking) 
-		Attack(time);
-	buffResets(time);
-	MoveToWaypoint();
 
-	if (attackAnimationTimer < time && playerSprite->GetStatus() == ATTACK)  	playerSprite->SetStatus(IDLE);
+	AllEnemies = enemiesRef;
+	
+	//ATTACK
+	if (isAttacking) Attack(time);
+	if (attackAnimationTimer < time && playerSprite->GetStatus() == ATTACK)  	
+		playerSprite->SetStatus(IDLE);
+
+	//MOVEMENT AND ANIMATION
+	MoveToWaypoint(); 
 	Animation();
 	playerSprite->Update(time);
 
+	//GAME WIN CONDTIONS
 	if (mainGoalCheese.HitTest(playerSprite) && !IsCheeseObtained)
 	{
 		obtainCheese.Play("obtainCheese.wav", 1);
@@ -84,7 +90,9 @@ void Player::Update(float time, std::vector<Enemy*>& enemiesRef)
 	if (IsCheeseObtained && playerSprite->GetX() > 0 && playerSprite->GetX() < 400 && playerSprite->GetY() > 0 && playerSprite->GetY() < 150)
 		isGameWon = true;
 
-
+	//BUFFS & STATS
+	buffResets(time); 
+	mpRegen(time); // mp regen
 	buffFlags = { isPlayerHidden, isPlayerHasted, IsCheeseObtained };
 	buffReaminingTime = { time - hideBuffTimer, time - speedBuffTimer };
 }
@@ -114,26 +122,26 @@ void Player::Draw(CGraphics* g, float time)
 		}
 	}
 
-	//cursor where to go
+	//Draw cursor where to go
 	if (showMovementPosTimer > time)
 		movementPos.Draw(g);
 
+	//player Draw
 	playerSprite->Draw(g);
 
-
+	//if in test mode Draw Nodes
 	for (auto obj : PathFinder::GetTestNodes()) 
 		obj->Draw(g);
 
-
+	//UI - SAVE OFFSET -> DRAW UI -> Resset OFFSET
 	CVector SaveOfset = g->GetScrollPos();
-	if(!IsCheeseObtained)
-		mainGoalCheese.Draw(g);
-
-	
-
 	g->SetScrollPos(0, 0);
 	UI::DrawUI(g, buffFlags, buffReaminingTime);
 	g->SetScrollPos(SaveOfset);
+
+	//Cheese Draw On the map if not yet obtained
+	if (!IsCheeseObtained)
+		mainGoalCheese.Draw(g);
 }
 
 /*********** MOVE TO ***********/
@@ -166,14 +174,12 @@ void Player::MoveToWaypoint()
 		}
 	}
 
-	//baffs
+	//speed buff apply
 	if(isPlayerHasted && playerSprite->GetSpeed() > 0)
 		playerSprite->SetSpeed(playerSpeedOrigin * 2);
 	else if(!isPlayerHasted && playerSprite->GetSpeed() > 0)
 		playerSprite->SetSpeed(playerSpeedOrigin);
 }
-
-
 
 /*********** ATTACK ENEMY ***********/
 void Player::Attack(float time)
@@ -195,7 +201,7 @@ void Player::Attack(float time)
 	//all enemies on front + distance less then 80 getting damage
 	for (auto enemy : AllEnemies)
 	{
-		if (Distance(enemy->enemySprite->GetPos(), playerSprite->GetPos()) > 60) 
+		if (Distance(enemy->enemySprite->GetPos(), playerSprite->GetPos()) > 70) 
 			continue;
 
 		//is enemy on fron of player sprite, depends on sprite rotation
@@ -207,7 +213,7 @@ void Player::Attack(float time)
 
 		bool isPlayerFacingEnemy = dotProduct >= 0.5f; 
 
-		//if facing each other and distance < 50
+		//if facing enemy
 		if (isPlayerFacingEnemy)
 			enemy->GettingDamage(50);
 	}

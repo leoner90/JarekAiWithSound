@@ -7,6 +7,7 @@
 CVector Enemy::saveCurrentPos = {0, 0};
 bool Enemy::isdogAllerted = false;
 
+/*********** CONSTRUCTOR ***********/
 Enemy::Enemy(Map& map, Player& p, CSprite& eSprite, CVector initPos, int type)
 	: PathFinder(map), DecisionMaker(map), player(p), map(map)
 {
@@ -30,10 +31,8 @@ Enemy::Enemy(Map& map, Player& p, CSprite& eSprite, CVector initPos, int type)
 
  	dogAlarma = false;
 	isdogAllerted = false;
-
 	oneTimeAlert = false;
 	catCallForAlert = false;
-
 	humanAlarma = false;
  
 
@@ -432,7 +431,6 @@ void Enemy::AISwitchLightOn(float gameTime)
 		// Stop on the arriving to dest
 		if (Distance(enemySprite->GetPos(), currentWaypoints.back()) <= 25)
 		{
-			
 			positionHoldTimer = 2000 + gameTime;
 			map.SetGlobalLight(true);
 			lightOn.Play("lightOn.wav", 0);

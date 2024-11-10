@@ -1,19 +1,16 @@
 #include "stdafx.h"
 #include "DecisionMaker.h"
 #include "Map/Map.h"
-//player
-//enemy
 
+
+/*********** CONSTRUCTOR ***********/
 DecisionMaker::DecisionMaker(Map& m) : map(m)
 {
 	chassing = false;
 }
 
-DecisionMaker::~DecisionMaker()
-{
-}
 
-
+/*********** IS PLAYER IN SIGHT ***********/
 bool DecisionMaker::SpotPlayer(CVector playerPos, CSprite& enemy, int enemyType)
 {
     bool canSee = true;
