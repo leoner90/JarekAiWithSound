@@ -4,7 +4,7 @@
 #include "player.h"
 
 //static For DOG CALL
-CVector Enemy::saveCurrentPos = {0, 0};
+CVector Enemy::saveCurrentPos = { 0, 0 };
 bool Enemy::isdogAllerted = false;
 
 /*********** CONSTRUCTOR ***********/
@@ -19,22 +19,22 @@ Enemy::Enemy(Map& map, Player& p, CSprite& eSprite, CVector initPos, int type)
 	enemySprite->ClearColorKey();
 	enemySprite->SetAnimation("Idle", 8);
 	enemySprite->SetStatus(PATROL);
-	mainSpriteSize = enemySprite->GetSize();
 
+	//resets
 	IsDead = false;
 	isPatroling = false;
 	isEnemyStaticPos = false;
 	positionHoldTimer = attackDellayTimer = 0;
-	damage = 10;
-	currentHp = maxHp = 100;
-	enemySpeed = 40;
-
- 	dogAlarma = false;
+	dogAlarma = false;
 	isdogAllerted = false;
 	oneTimeAlert = false;
 	catCallForAlert = false;
 	humanAlarma = false;
- 
+
+	//stats
+	damage = 10;
+	currentHp = maxHp = 100;
+	enemySpeed = 40;
 
 	bool isInCallForHelp = false;
 	if (type == HUMAN || type == DOG)
@@ -48,6 +48,16 @@ Enemy::Enemy(Map& map, Player& p, CSprite& eSprite, CVector initPos, int type)
 	}
 }
 
+/*********** DESTRUCTOR ***********/
+Enemy::~Enemy()
+{
+	patrolVectorList.clear();
+	currentWaypoints.clear();
+	delete enemyHpBarRect;
+	delete enemySprite;
+}
+
+/*********** UPDATE ***********/
 void Enemy::Update(float time)
 {
 	if (IsDead) return;
@@ -57,6 +67,7 @@ void Enemy::Update(float time)
 	Animation(time);
 	enemySprite->Update(time);
 
+	//can see the player to REDO :)
 	bool canSee = DecisionMaker::SpotPlayer(player.getPlayerSprite()->GetPos(), *enemySprite, enemyType);
 	if (player.IsPlayerVisible()) canSee = false;
 
@@ -73,7 +84,7 @@ void Enemy::Update(float time)
 	//HUMAN CALL TO SWITCH LIGHT POSITION
 	if ((!map.GetGlobalLightOn() && enemyType == HUMAN))
 		AISwitchLightOn(time);
-		
+
 	//CAT CALL FOR HELP IF LOW HP
 	if (currentHp < 80 && !oneTimeAlert && (enemyType != DOG && enemyType != HUMAN))
 		catCallForAlert = true;
@@ -87,7 +98,7 @@ void Enemy::Update(float time)
 		return;
 	}
 
-	//basicly rotate cat to player if it's allready seen , to fix a bag that during attack player can just run behind the cat and cat starts patroling
+	//basicly rotates cat to player if it's allready seen , to fix a bag that during attack player can just run behind the cat and cat starts patroling
 	if (Distance(enemySprite->GetPos(), player.getPlayerSprite()->GetPos()) < 100 && !player.IsPlayerVisible())
 		enemySprite->SetDirection(player.getPlayerSprite()->GetPos() - enemySprite->GetPos());
 
@@ -101,26 +112,36 @@ void Enemy::Update(float time)
 	Patroling(time);
 }
 
+/*********** DRAW ***********/
+void Enemy::Draw(CGraphics* g)
+{
+	if (IsDead) return;
+	enemySprite->Draw(g);
+	enemyHpBarRect->Draw(g);
+	Dialogbox::Draw(g, CVector(enemySprite->GetX(), enemySprite->GetTop() + 25));
+}
+
+/*********** CHASING ***********/
 void Enemy::Chassing(float gametime)
 {
 	bool canSee = DecisionMaker::SpotPlayer(player.getPlayerSprite()->GetPos(), *enemySprite, enemyType);
- 
+
 	if (player.IsPlayerVisible())
 		canSee = false;
- 
+
 	if (!currentWaypoints.empty() && enemySprite->GetStatus() == CHASE)
 	{
 		CVector destinationToFisrtWP = currentWaypoints.front() - enemySprite->GetPosition(); // directional vector
-		// Start moving toward the first waypoint if player isn't moving
+		// Start moving toward the first waypoint 
 		if (enemySprite->GetSpeed() < 1 || canSee)
 		{
 			enemySprite->SetDirection(destinationToFisrtWP);
 			enemySprite->SetRotation(enemySprite->GetDirection());
 			enemySprite->SetSpeed(enemySpeed * 2);
-			if(Distance(enemySprite->GetPos(), player.getPlayerSprite()->GetPos()) > 100)
+			if (Distance(enemySprite->GetPos(), player.getPlayerSprite()->GetPos()) > 100)
 				ShowDialogBox("I CAN SEE YOU!", gametime);
 		}
-	 
+
 		// Stop on the arriving to dest
 		if ((Dot(enemySprite->GetVelocity(), destinationToFisrtWP) < 0))
 		{
@@ -130,7 +151,7 @@ void Enemy::Chassing(float gametime)
 				playerChasingLastSpot = false;
 		}
 	}
-
+	//START CHASING
 	float distance = Distance(enemySprite->GetPos(), player.getPlayerSprite()->GetPos());
 	if (canSee && distance < 300 && distance > 70)
 	{
@@ -140,7 +161,7 @@ void Enemy::Chassing(float gametime)
 		playerChasingLastSpot = true;
 	}
 
-
+	//RETURN TO PATROL
 	else if (!isEnemyStaticPos && enemySprite->GetStatus() == CHASE && !playerChasingLastSpot)
 	{
 		if (Distance(enemySprite->GetPos(), player.getPlayerSprite()->GetPos()) > 100)
@@ -149,6 +170,7 @@ void Enemy::Chassing(float gametime)
 		enemySprite->SetStatus(PATROL);
 		positionHoldTimer = 0;
 	}
+	// IF STATIC NPC (NO PATROL) RETURN TO STATIC POS
 	else if (isEnemyStaticPos && enemySprite->GetStatus() == CHASE && player.IsPlayerVisible())
 	{
 		currentWaypoints.clear();
@@ -156,18 +178,15 @@ void Enemy::Chassing(float gametime)
 		currentWaypoints = PathFinder::PathGenerator(saveStaticPos.GetX(), saveStaticPos.GetY(), enemySprite->GetPos(), false);
 		enemySprite->SetStatus(RETURNTOPOS);
 	}
-	
+
 }
 
+/*********** ATTACK ***********/
 void Enemy::Attack(float time)
 {
 	bool canSee = DecisionMaker::SpotPlayer(player.getPlayerSprite()->GetPos(), *enemySprite, enemyType);
-
-
-
 	if (player.IsPlayerVisible()) canSee = false;
 	float distance = Distance(enemySprite->GetPos(), player.getPlayerSprite()->GetPos());
-
 
 	//attack if close
 	if (enemySprite->GetStatus() == CHASE && distance < 70 && canSee)
@@ -178,19 +197,17 @@ void Enemy::Attack(float time)
 		currentWaypoints.clear();
 	}
 
-
+	//BACK TO CHASE
 	if (enemySprite->GetStatus() == ATTACK && ((Distance(enemySprite->GetPos(), player.getPlayerSprite()->GetPos()) > 70 || player.IsPlayerVisible())))
 	{
 		currentWaypoints.clear();
-	
 		enemySprite->SetStatus(CHASE);
 		currentWaypoints.push_back(player.getPlayerSprite()->GetPos());
 	}
 
-
+	//DAMAGE PLAYER
 	if (enemySprite->GetStatus() == ATTACK && attackDellayTimer < time && !player.IsPlayerVisible())
 	{
-
 		attackDellayTimer = time + 1500;
 		if (enemyType == CAT) attakSound.Play("cat.wav", 0);
 		else if (enemyType == DOG) attakSound.Play("dogBark.wav", 0);
@@ -199,21 +216,12 @@ void Enemy::Attack(float time)
 	}
 }
 
-void Enemy::GettingDamage(float DamageAmount)
-{
-	currentHp -= DamageAmount;
-	if (currentHp <= 0)
-	{
-		IsDead = true;
-		deadSound.Play("EnemyDeath.wav", 0);
-	}
-}
-
-
+/*********** PATROLING ***********/
 void Enemy::Patroling(float time)
 {
 	if (enemySprite->GetStatus() == PATROL || (enemySprite->GetStatus() == IDLE && enemyType != DOG && enemyType != HUMAN))
 	{
+		//IF NO PATROL POIONT -> SET NEW ONES
 		if (!isEnemyStaticPos && !isPatroling)
 		{
 			ShowDialogBox("PATROLING!", time);
@@ -236,7 +244,6 @@ void Enemy::Patroling(float time)
 				enemySprite->SetRotation(enemySprite->GetDirection() - 0);
 			}
 
- 
 			if (Dot(enemySprite->GetVelocity(), destinationToFisrtWP) < 0)
 			{
 				enemySprite->SetVelocity(0, 0);
@@ -257,14 +264,18 @@ void Enemy::Patroling(float time)
 	}
 }
 
-void Enemy::Draw(CGraphics* g)
+/*********** GETTING DAMAGE ***********/
+void Enemy::GettingDamage(float DamageAmount)
 {
-	if (IsDead) return;
-	enemySprite->Draw(g);
-	enemyHpBarRect->Draw(g);
-	Dialogbox::Draw(g, CVector(enemySprite->GetX(), enemySprite->GetTop() + 25));
+	currentHp -= DamageAmount;
+	if (currentHp <= 0)
+	{
+		IsDead = true;
+		deadSound.Play("EnemyDeath.wav", 0);
+	}
 }
 
+/*********** MOVING FORWARD ***********/
 void Enemy::ifwaipointNotEmptyGoto()
 {
 	CVector anyChanges = currentWaypoints[0];
@@ -284,14 +295,7 @@ void Enemy::ifwaipointNotEmptyGoto()
 	}
 }
 
-Enemy::~Enemy()
-{
-	patrolVectorList.clear();
-	currentWaypoints.clear();
-	delete enemyHpBarRect;
-	delete enemySprite;
-}
-
+/*********** UI ***********/
 void Enemy::EnemyInterface()
 {
 	float baseHpBarWidth = 70;
@@ -301,24 +305,22 @@ void Enemy::EnemyInterface()
 	enemyHpBarRect->SetPosition(enemySprite->GetX(), enemySprite->GetTop() + 10);
 }
 
-
- 
-
+/*********** ANIMATION ***********/
 void Enemy::Animation(float time)
 {
 	if (lastState == enemySprite->GetStatus() || (enemySprite->GetStatus() == RETURNTOPOS && positionHoldTimer > time))
 		return;
- 
+
 	enemySprite->SetAnimation("Idle", 8);
- 
-	if (enemySprite->GetStatus() == CHASE || enemySprite->GetStatus() == PATROL || enemySprite->GetStatus() ==  RETURNTOPOS || enemySprite->GetStatus() == WALK) 
+
+	if (enemySprite->GetStatus() == CHASE || enemySprite->GetStatus() == PATROL || enemySprite->GetStatus() == RETURNTOPOS || enemySprite->GetStatus() == WALK)
 	{
 		int walkFrames = 12;
 		if (enemyType == HUMAN)
 			walkFrames = 8;
 		enemySprite->SetAnimation("Walk", 12);
 	}
-	else if (enemySprite->GetStatus() == ATTACK) 
+	else if (enemySprite->GetStatus() == ATTACK)
 	{
 		int attackFrames = 3;
 		if (enemyType == DOG)
@@ -330,6 +332,7 @@ void Enemy::Animation(float time)
 	lastState = enemySprite->GetStatus();
 }
 
+/*********** CAT CALL FOR ALERT ***********/
 void Enemy::callForAlert(float gameTime)
 {
 	if (!isInCallForHelp)
@@ -342,12 +345,12 @@ void Enemy::callForAlert(float gameTime)
 		currentWaypoints = PathFinder::PathGenerator(1200, 1200, enemySprite->GetPos(), false);
 		isInCallForHelp = true;
 	}
- 
+
 	if (!currentWaypoints.empty())
 	{
 		ifwaipointNotEmptyGoto();
+
 		// Stop on the arriving to dest
-		
 		if (Distance(enemySprite->GetPos(), currentWaypoints.back()) <= 25)
 		{
 			currentWaypoints.clear();
@@ -356,12 +359,12 @@ void Enemy::callForAlert(float gameTime)
 			//if cat runs for a dog and comes back where mouse was , reset back to patrol
 			if (oneTimeAlert)
 			{
-				isPatroling = false;  
+				isPatroling = false;
 				enemySprite->SetStatus(PATROL);
 				positionHoldTimer = 0;
 				currentWaypoints.clear();
 				enemySprite->SetVelocity(0, 0);
-				
+
 				catCallForAlert = false;
 			}
 			//if cat rans for a dog, alerts the dog , and sets movement back to where mouse was
@@ -373,15 +376,14 @@ void Enemy::callForAlert(float gameTime)
 					isdogAllerted = true;
 					currentWaypoints = PathFinder::PathGenerator(saveCurrentPos.GetX(), saveCurrentPos.GetY(), enemySprite->GetPos(), false);
 				}
-				
-				oneTimeAlert = true;
-				
-			}
 
+				oneTimeAlert = true;
+			}
 		}
 	}
 }
 
+/*********** DOG ALLERTED ***********/
 void Enemy::DogAlert(float gameTime)
 {
 	if (!dogAlarma)
@@ -397,8 +399,9 @@ void Enemy::DogAlert(float gameTime)
 	if (!currentWaypoints.empty())
 	{
 		ifwaipointNotEmptyGoto();
-		// Stop on the arriving to dest
 
+		// Stop on the arriving to dest -  waits and  return back to static
+		cout << Distance(enemySprite->GetPos(), currentWaypoints.back()) << endl;
 		if (Distance(enemySprite->GetPos(), currentWaypoints.back()) <= 25)
 		{
 			positionHoldTimer = 2000 + gameTime;
@@ -410,11 +413,11 @@ void Enemy::DogAlert(float gameTime)
 			enemySprite->SetStatus(RETURNTOPOS);
 			enemySprite->SetAnimation("Idle", 8);
 			enemySprite->SetVelocity(0, 0);
-			
 		}
 	}
 }
 
+/*********** AI LOGIC IF LIGHT IS OFF ***********/
 void Enemy::AISwitchLightOn(float gameTime)
 {
 	if (!humanAlarma)
@@ -445,7 +448,7 @@ void Enemy::AISwitchLightOn(float gameTime)
 	}
 }
 
-
+/*********** RETURNING TO POSITION ***********/
 void Enemy::movingToPoint(float gameTime)
 {
 	if (positionHoldTimer > gameTime) return;
@@ -458,10 +461,21 @@ void Enemy::movingToPoint(float gameTime)
 		{
 			currentWaypoints.clear();
 			enemySprite->SetStatus(IDLE);
-		
+
 			enemySprite->SetVelocity(0, 0);
 			isdogAllerted = false;
 			dogAlarma = false;
 		}
 	}
+}
+
+//GETTERS
+CSprite* Enemy::GetEnemySprite()
+{
+	return enemySprite;
+}
+
+bool Enemy::IsEnemyDead()
+{
+	return IsDead;
 }

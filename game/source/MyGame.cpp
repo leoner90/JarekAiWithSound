@@ -16,9 +16,9 @@ CMyGame::CMyGame(void) : mainMap(), player(mainMap)
 	cat2SpritePrefab->AddImage("catSprite2.png", "Attack", 36, 1, 30, 0, 33, 0);
 
 	dogSpritePrefab = new CSprite();
-	dogSpritePrefab->AddImage("dogSprite.png", "Attack", 36, 1, 0, 0, 7, 0  );
-	dogSpritePrefab->AddImage("dogSprite.png", "Walk", 36, 1, 8, 0, 15, 0  );
-	dogSpritePrefab->AddImage("dogSprite.png", "Idle", 36, 1, 16, 0, 35, 0 );
+	dogSpritePrefab->AddImage("dogSprite.png", "Attack", 36, 1, 0, 0, 7, 0);
+	dogSpritePrefab->AddImage("dogSprite.png", "Walk", 36, 1, 8, 0, 15, 0);
+	dogSpritePrefab->AddImage("dogSprite.png", "Idle", 36, 1, 16, 0, 35, 0);
 
 	humanSpritePrefab = new CSprite();
 	humanSpritePrefab->AddImage("human.png", "Idle", 2, 4, 0, 3, 0, 3, CColor::White());
@@ -52,15 +52,15 @@ CMyGame::CMyGame(void) : mainMap(), player(mainMap)
 /*********** UPDATE ***********/
 void CMyGame::OnUpdate()
 {
-	if (IsMenuMode() || IsPaused() || gameOver) 
+	if (IsMenuMode() || IsPaused() || gameOver)
 		return;
 	Uint32 t = GetTime();
-	
+
 	//Update And delete Enemies
-	for (auto AIplayer : AllEnemies) 
+	for (auto AIplayer : AllEnemies)
 	{
 		AIplayer->Update(t);
-		if (AIplayer->IsDead) 
+		if (AIplayer->IsEnemyDead())
 			AllEnemies.erase(find(AllEnemies.begin(), AllEnemies.end(), AIplayer));
 	}
 
@@ -77,7 +77,7 @@ void CMyGame::OnDraw(CGraphics* g)
 	//if game over draw win or game over screen for 2 sec
 	if (deadScreenTimer != 0 && deadScreenTimer > GetTime())
 	{
-		if(player.IsGameWon())
+		if (player.IsGameWon())
 			gameWinBg.Draw(g);
 		else
 			gameOverBg.Draw(g);
@@ -85,7 +85,7 @@ void CMyGame::OnDraw(CGraphics* g)
 	//if menu mode show menu
 	else if (IsMenuMode() || IsPaused())
 		menuHandler(g);
-	else 
+	else
 	{
 		//if In Game Draw (map, enemies, p[layer)
 		mainMap.Draw(g, player.getPlayerSprite()->GetPosition());
@@ -99,7 +99,7 @@ void CMyGame::OnDraw(CGraphics* g)
 void CMyGame::OnInitialize()
 {
 	PauseGame(false);
-	ChangeMode(MODE_MENU);  
+	ChangeMode(MODE_MENU);
 	gameStarted = IsGameWon = false;
 	currentMenuState = MENU;
 	startScreenSelection = NEWGAME;
@@ -127,7 +127,7 @@ void CMyGame::OnGameOver()
 	else
 		winSound.Play("win.wav", 0);;
 
-	deadScreenTimer =  2500;
+	deadScreenTimer = 2500;
 	gameOver = true;
 	gameStarted = false;
 	currentMenuState = MENU;
@@ -213,7 +213,7 @@ void CMyGame::OnRButtonDown(Uint16 x, Uint16 y)
 /***********  KEYBOARD EVENTS ***********/
 void CMyGame::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode)
 {
- 
+
 	if (!IsMenuMode() && !IsPaused() && !gameOver)
 		player.OnKeyDown(sym, mod, unicode, GetTime());
 
@@ -276,7 +276,7 @@ void CMyGame::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode)
 			showControllImg = false;
 			startScreenSelection = CONTROLS;
 		}
-		
+
 		if (gameStarted)
 		{
 			if (currentMenuState == MENU && !showControllImg)

@@ -6,7 +6,7 @@
 /*********** CONSTRUCTOR ***********/
 DecisionMaker::DecisionMaker(Map& m) : map(m)
 {
-	chassing = false;
+    chassing = false;
 }
 
 
@@ -18,7 +18,7 @@ bool DecisionMaker::SpotPlayer(CVector playerPos, CSprite& enemy, int enemyType)
     if (enemyType != CAT)
         angleOfView = 1;
 
-    const float fieldOfViewCosine = cos(M_PI /  angleOfView); // 60 degrees of each side of direction
+    const float fieldOfViewCosine = cos(M_PI / angleOfView); // 60 degrees of each side of direction
 
     CVector enemyDirection = enemy.GetVelocity().Normalize();
     CVector toPlayer = (playerPos - enemy.GetPos()).Normalize();
@@ -44,16 +44,17 @@ bool DecisionMaker::SpotPlayer(CVector playerPos, CSprite& enemy, int enemyType)
             }
         }
     }
-
     return canSee;
-
 }
 
 void DecisionMaker::ChasePlayer(CVector playerPos, CVector enemyPos)
 {
-
+    //TODO ...... ...
+    //Sorry have to do Networking module :)
 }
 
 void DecisionMaker::ReturnToBaseState()
 {
+    //TODO ...... ...
+    //Sorry have to do Networking module :)
 }

@@ -15,7 +15,7 @@ Player::Player(Map& map) : PathFinder(map), map(map)
 	playerSprite = new CSprite;
 	playerSprite->AddImage("player.png", "Idle", 31, 1, 0, 0, 14, 0);
 	playerSprite->AddImage("player.png", "Walk", 31, 1, 16, 0, 23, 0);
-	playerSprite->AddImage("player.png", "Attack",  31, 1, 24, 0, 30, 0);
+	playerSprite->AddImage("player.png", "Attack", 31, 1, 24, 0, 30, 0);
 	playerSprite->SetAnimation("Idle");
 	damage = 40;
 
@@ -69,14 +69,14 @@ void Player::Update(float time, std::vector<Enemy*>& enemiesRef)
 	if (IsDead) return;
 
 	AllEnemies = enemiesRef;
-	
+
 	//ATTACK
 	if (isAttacking) Attack(time);
-	if (attackAnimationTimer < time && playerSprite->GetStatus() == ATTACK)  	
+	if (attackAnimationTimer < time && playerSprite->GetStatus() == ATTACK)
 		playerSprite->SetStatus(IDLE);
 
 	//MOVEMENT AND ANIMATION
-	MoveToWaypoint(); 
+	MoveToWaypoint();
 	Animation();
 	playerSprite->Update(time);
 
@@ -86,12 +86,12 @@ void Player::Update(float time, std::vector<Enemy*>& enemiesRef)
 		obtainCheese.Play("obtainCheese.wav", 1);
 		IsCheeseObtained = true;
 	}
-		
+
 	if (IsCheeseObtained && playerSprite->GetX() > 0 && playerSprite->GetX() < 400 && playerSprite->GetY() > 0 && playerSprite->GetY() < 150)
 		isGameWon = true;
 
 	//BUFFS & STATS
-	buffResets(time); 
+	buffResets(time);
 	mpRegen(time); // mp regen
 	buffFlags = { isPlayerHidden, isPlayerHasted, IsCheeseObtained };
 	buffReaminingTime = { time - hideBuffTimer, time - speedBuffTimer };
@@ -130,7 +130,7 @@ void Player::Draw(CGraphics* g, float time)
 	playerSprite->Draw(g);
 
 	//if in test mode Draw Nodes
-	for (auto obj : PathFinder::GetTestNodes()) 
+	for (auto obj : PathFinder::GetTestNodes())
 		obj->Draw(g);
 
 	//UI - SAVE OFFSET -> DRAW UI -> Resset OFFSET
@@ -147,16 +147,16 @@ void Player::Draw(CGraphics* g, float time)
 /*********** MOVE TO ***********/
 void Player::MoveToWaypoint()
 {
-	if (!currentWaypoint.empty()) 
+	if (!currentWaypoint.empty())
 	{
 		CVector anyChanges = currentWaypoint[0];
 		currentWaypoint = PathFinder::PathSmoothing(currentWaypoint, playerSprite->GetPos(), playerSprite);
-		CVector destinationToFisrtWP = currentWaypoint.front() -  playerSprite->GetPosition();
+		CVector destinationToFisrtWP = currentWaypoint.front() - playerSprite->GetPosition();
 
 		//if there was any changes after PathSmoothing, reset speed to set new direction bellow
 		if (anyChanges != currentWaypoint[0])
 			playerSprite->SetVelocity(0, 0);
-			
+
 		// Start moving toward the first waypoint if player isn't moving
 		if (playerSprite->GetSpeed() < 1)
 		{
@@ -175,9 +175,9 @@ void Player::MoveToWaypoint()
 	}
 
 	//speed buff apply
-	if(isPlayerHasted && playerSprite->GetSpeed() > 0)
+	if (isPlayerHasted && playerSprite->GetSpeed() > 0)
 		playerSprite->SetSpeed(playerSpeedOrigin * 2);
-	else if(!isPlayerHasted && playerSprite->GetSpeed() > 0)
+	else if (!isPlayerHasted && playerSprite->GetSpeed() > 0)
 		playerSprite->SetSpeed(playerSpeedOrigin);
 }
 
@@ -197,21 +197,21 @@ void Player::Attack(float time)
 		isPlayerHidden = true;
 		map.SetGlobalLight(false);
 	}
-		
+
 	//all enemies on front + distance less then 80 getting damage
 	for (auto enemy : AllEnemies)
 	{
-		if (Distance(enemy->enemySprite->GetPos(), playerSprite->GetPos()) > 70) 
+		if (Distance(enemy->GetEnemySprite()->GetPos(), playerSprite->GetPos()) > 70)
 			continue;
 
 		//is enemy on fron of player sprite, depends on sprite rotation
 		float playerRotation = playerSprite->GetRotation() * (M_PI / 180.0f); // to radians
 		CVector playerForward(sin(playerRotation), cos(playerRotation)); // player Forward Vector
-		CVector directionToEnemy = enemy->enemySprite->GetPos() - playerSprite->GetPos(); // directional Vector
-		
+		CVector directionToEnemy = enemy->GetEnemySprite()->GetPos() - playerSprite->GetPos(); // directional Vector
+
 		float dotProduct = Dot(playerForward, directionToEnemy.Normalize());
 
-		bool isPlayerFacingEnemy = dotProduct >= 0.5f; 
+		bool isPlayerFacingEnemy = dotProduct >= 0.5f;
 
 		//if facing enemy
 		if (isPlayerFacingEnemy)
@@ -239,7 +239,7 @@ void Player::buffResets(float time)
 	// timers reset - extra condition to speed up check?
 	if (isPlayerHasted && speedBuffTimer < time)  isPlayerHasted = false;
 	if (isAttacking && attackDellayTimer < time)  isAttacking = false;
-	if (isPlayerHidden && hideBuffTimer < time && map.GetGlobalLightOn()) 
+	if (isPlayerHidden && hideBuffTimer < time && map.GetGlobalLightOn())
 		isPlayerHidden = false;
 }
 
@@ -304,13 +304,13 @@ void Player::OnKeyDown(SDLKey sym, SDLMod mod, Uint16 unicode, float time)
 		speedSkill.Play("speedSkill.wav", 0);
 	}
 }
- 
+
 /*********** MOUSE ACTIONS ***********/
 void Player::OnRButtonDown(Uint16 x, Uint16 y, float gameTime)
 {
 	playerSprite->SetVelocity(0, 0);
 	playerSprite->SetStatus(IDLE);
-	currentWaypoint = PathFinder::PathGenerator(x,y, playerSprite->GetPos(),true);
+	currentWaypoint = PathFinder::PathGenerator(x, y, playerSprite->GetPos(), true);
 	if (!currentWaypoint.empty())
 	{
 		movementPos.SetPos(currentWaypoint.back());
